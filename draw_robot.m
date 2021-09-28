@@ -2,68 +2,76 @@ function[]= draw_robot(fig, state, measurement, param, color_factor)
 % input state
 %  1 2 3     4  5  6  7 
 % position    orientation 
+
+    % colors are ugly...
     set(0, 'CurrentFigure', fig)
     % draw robot  
     p_er        = state(1:3);
     q_er        = quaternion(state(4:7)');
     R_er = quat2rotm(q_er);
     
-    % joint angle 
-    q = zeros(3,1);
-    q = measurement(7:9);
-
-
+    % joint angle, automatically construct theta_list according to active
+    % legs
+    theta_list = zeros(3*param.num_leg,1);
+    idx = 1;
+    for i=1:param.num_leg 
+        if param.active_leg(i) == 1
+            theta_list((i-1)*3+1:(i-1)*3+3) = measurement(6+(idx-1)*3+1:6+(idx-1)*3+3);
+            idx = idx + 1;
+        end
+    end
 
     % draw body
     draw_cube(fig, p_er, R_er,param.vis_bl,param.vis_bw,param.vis_bh,color_factor*[1 0 1])
 
-    % draw legs and force
-    % define a draw arrow function
-%     drawArrow = @(x,y,z,varargin) quiver3( x(1),y(1),z(1),x(2)-x(1),y(2)-y(1),z(2)-z(1),0, varargin{:} );
-%     for i=1:6
-%         thetalist_link1 =[q(1,i); q(2,i)];
-%         thetalist_link2 =[q(1,i); q(2,i); q(3,i)];
-%         if (mod(i,2) == 0)
-%             T1 = FKinSpace(param.M1, param.right_Slist_link1, thetalist_link1);
-%         else
-%             T1 = FKinSpace(param.M1, param.left_Slist_link1, thetalist_link1);
-%         end
-%         % link1 pose and orientation
-%         p_s1 = T1(1:3,4);
-%         R_s1 = T1(1:3,1:3);
-%         p_c1 = param.R_cs(:,:,i)*p_s1 + param.t_cs(:,i);
-%         R_c1 = param.R_cs(:,:,i)*R_s1;
-%         p_e1 = R_ec*p_c1 + t_ec;
-%         R_c1 = R_ec*R_c1;
-%         draw_cube(fig, p_e1, R_c1,param.leg_l1,param.vis_lw,param.vis_lw,color_factor*[0.2 0.6 1])
-% 
-%         % link2 pose and orientation
-%         if (mod(i,2) == 0)
-%             T2 = FKinSpace(param.M2, param.right_Slist_link2, thetalist_link2);
-%         else
-%             T2 = FKinSpace(param.M2, param.left_Slist_link2, thetalist_link2);
-%         end
-%         p_s2 = T2(1:3,4);
-%         R_s2 = T2(1:3,1:3);
-%         p_c2 = param.R_cs(:,:,i)*p_s2 + param.t_cs(:,i);
-%         R_c2 = param.R_cs(:,:,i)*R_s2;
-%         p_e2 = R_ec*p_c2 + t_ec;
-%         R_c2 = R_ec*R_c2;
-%         draw_cube(fig, p_e2, R_c2,param.leg_l2,param.vis_lw,param.vis_lw,color_factor*[0 0 1])
-% 
-% %         if (mod(i,2) == 0)
-% %             T3 = FKinSpace(param.M3, param.right_Slist_link2, thetalist_link2);
-% %         else
-% %             T3 = FKinSpace(param.M3, param.left_Slist_link2, thetalist_link2);
-% %         end
-% %         p_s3 = T3(1:3,4);
-% %         R_s3 = T3(1:3,1:3);
-% %         p_c3 = param.R_cs(:,:,i)*p_s3 + param.t_cs(:,i);
-% %         p_e3 = R_ec*p_c3 + t_ec;
-% %         force_scale_factor = 0.009;
-% %         x_arrow = [p_e3(1) p_e3(1)+force_scale_factor*F(1,i)];
-% %         y_arrow = [p_e3(2) p_e3(2)+force_scale_factor*F(2,i)];
-% %         z_arrow = [p_e3(3) p_e3(3)+force_scale_factor*F(3,i)];
-% %         drawArrow(x_arrow,y_arrow,z_arrow,'linewidth',2,'color',color_factor*[1 0 0])
-%     end
+    % draw legs
+    for i=1:param.num_leg 
+        if param.active_leg(i) == 1
+            theta = theta_list((i-1)*3+1:(i-1)*3+3);
+            % draw hip
+            p_rhip = autoFunc_fk_hip_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            R_rhip = autoFunc_fk_hip_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_ehip = R_er*p_rhip + p_er;
+            R_ehip = R_er*R_rhip;
+            draw_cube(fig, p_ehip, R_ehip, 0.05,0.16,0.05,color_factor*[0.2 0.6 1])
+
+            % draw thigh
+            p_rthigh = autoFunc_fk_thigh_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            R_rthigh = autoFunc_fk_thigh_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_ethigh = R_er*p_rthigh + p_er;
+            R_ethigh = R_er*R_rthigh;
+            draw_cube(fig, p_ethigh, R_ethigh, 0.03,0.03,param.lt,color_factor*[0.8 0.2 1])
+            % draw calf
+            p_rcalf = autoFunc_fk_calf_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            R_rcalf = autoFunc_fk_calf_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_ecalf = R_er*p_rcalf + p_er;
+            R_ecalf = R_er*R_rcalf;
+            draw_cube(fig, p_ecalf, R_ecalf, 0.03,0.03,param.lt,color_factor*[0.5 0.5 0.8])
+        end
+    end
+
+    % draw camera FOV
+    p_c = [0;0;0]; % center of camera in camera frame
+    distance = 10;
+    p_lu = [param.horiz_film/2/param.focus_len*distance;
+            param.verti_film/2/param.focus_len*distance;
+                                               distance];
+    p_ll = [param.horiz_film/2/param.focus_len*distance;
+            -param.verti_film/2/param.focus_len*distance;
+                                               distance];
+    p_ru = [-param.horiz_film/2/param.focus_len*distance;
+            param.verti_film/2/param.focus_len*distance;
+                                               distance];
+    p_rl = [-param.horiz_film/2/param.focus_len*distance;
+            -param.verti_film/2/param.focus_len*distance;
+                                               distance];
+    p_wc = R_er*(param.R_rc*p_c +param.p_rc)+p_er; % center of camera in world frame
+    p_luc = R_er*(param.R_rc*p_lu +param.p_rc)+p_er; % p_lu in world frame
+    p_llc = R_er*(param.R_rc*p_ll +param.p_rc)+p_er; % p_ll in world frame
+    p_ruc = R_er*(param.R_rc*p_ru +param.p_rc)+p_er; % p_ru in world frame
+    p_rlc = R_er*(param.R_rc*p_rl +param.p_rc)+p_er; % p_rl in world frame
+    plot3([p_wc(1) p_luc(1)],[p_wc(2) p_luc(2)],[p_wc(3) p_luc(3)],'Color',[0 0 0],'LineWidth',3);
+    plot3([p_wc(1) p_ruc(1)],[p_wc(2) p_ruc(2)],[p_wc(3) p_ruc(3)],'Color',[0 0 0],'LineWidth',3);
+    plot3([p_wc(1) p_llc(1)],[p_wc(2) p_llc(2)],[p_wc(3) p_llc(3)],'Color',[0 0 0],'LineWidth',3);
+    plot3([p_wc(1) p_rlc(1)],[p_wc(2) p_rlc(2)],[p_wc(3) p_rlc(3)],'Color',[0 0 0],'LineWidth',3);
 end
