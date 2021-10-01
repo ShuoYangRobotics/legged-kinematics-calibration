@@ -4,7 +4,7 @@
 % the matlab functions then outputs to C++ functions
 
 % first add modern robotics tool box
-addpath('unitree_A1\mr')
+addpath('unitree_A1/mr')
 
 %% modify this section is parameters to be estimated are different
 % % estimate lc

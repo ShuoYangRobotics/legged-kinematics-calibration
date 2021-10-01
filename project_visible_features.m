@@ -1,4 +1,6 @@
 function [num_visible_features, visible_feature_ids, feature_px_pos] = project_visible_features(state, param)
+% project features in param to camera frame according to current pose in
+% state
 
 % convert feature to camera frame 
 features_w = [param.feature_x';param.feature_y';param.feature_z'];
@@ -23,5 +25,7 @@ id_list = 1:param.num_features;
 visible_feature_ids = id_list(feature_px_inview);
 
 feature_px_pos = feature_pxs(:,feature_px_inview);
+
+feature_px_pos = feature_px_pos(:);
 
 end

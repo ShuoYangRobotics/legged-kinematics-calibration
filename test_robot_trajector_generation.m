@@ -10,8 +10,8 @@
 % init parameter
 % param_init;
 
-% adjust number of active legs 
-param.active_leg = [0,1,0,0];
+% assume all legs are active 
+param.active_leg = [1,1,1,1];
 
 %% generate one random stance
 tgt_x = 1.8;
@@ -23,21 +23,32 @@ tgt_roll = 5*randn;
 
 q = quaternion([tgt_yaw tgt_pitch tgt_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(q);
-state_init = [tgt_x;tgt_y;tgt_z;w;x;y;z;zeros(3,1);zeros(3,1);zeros(3,1)];
-angle_measure = 0.2*randn(3*sum(param.active_leg),1) + repmat([0;1.1;-0.7],sum(param.active_leg),1);
-
+pose_init = [tgt_x;tgt_y;tgt_z;w;x;y;z];
+angle_measure = 0.2*randn(3*sum(param.active_leg),1) + repmat([0;1.2;-1.8],sum(param.active_leg),1);
 measurement = [zeros(3,1);zeros(3,1);angle_measure;zeros(3,1);zeros(3,1)];
 
 %% generate another stance
-% fix one random foot
-fix_foot_id = randi(param.num_leg);
-while param.active_leg(fix_foot_id) ~= 1
-    fix_foot_id = randi(param.num_leg);
-end
-disp(['fix foot '  num2str(fix_foot_id)])
+% % generate new stance location 
+next_x = tgt_x + 0.07+0.03*(2*randn-1);
+next_y = tgt_y + 0.01+0.03*(2*randn-1);
+next_z = tgt_z + 0.01+0.02*(2*randn-1);
+next_yaw = tgt_yaw+3;
+next_pitch = tgt_pitch;
+next_roll = tgt_roll;
+
+next_q = quaternion([next_yaw next_pitch next_roll],'eulerd','ZYX','frame');
+[w,x,y,z] = parts(next_q);
+pose_next = [next_x;next_y;next_z;w;x;y;z;zeros(3,1);zeros(3,1);zeros(3,1)];
+next_p_er        = pose_next(1:3);
+next_q_er        = quaternion(pose_next(4:7)');
+
+% calculate leg angles at new stance
+param.num_fix_foot = 2;
+fix_foot_id_list = [1;2;3;4];
+disp(['fix foot '  num2str(fix_foot_id')])
 % calculate fix foot_position
-p_er        = state_init(1:3);
-q_er        = quaternion(state_init(4:7)');
+p_er        = pose_init(1:3);
+q_er        = quaternion(pose_init(4:7)');
 R_er = quat2rotm(q_er);
 % joint angle, automatically construct theta_list according to active
 % legs
@@ -49,51 +60,82 @@ for i=1:param.num_leg
         idx = idx + 1;
     end
 end
-theta = theta_list((fix_foot_id-1)*3+1:(fix_foot_id-1)*3+3);
-p_rf = autoFunc_fk_pf_pos(theta,[param.lc],[param.ox(fix_foot_id);param.oy(fix_foot_id);param.d(fix_foot_id);param.lt]);
-p_wf = R_er*p_rf + p_er;  % the fix foot position in world frame
-% % generate new stance location only has x direction displacement
-next_x = tgt_x + 0.05*(2*randn-1);
-next_y = tgt_y;
-next_z = tgt_z;
-next_yaw = tgt_yaw;
-next_pitch = tgt_pitch;
-next_roll = tgt_roll;
+next_angles = 0.2*randn(3,param.num_leg) + repmat([0;1.2;-1.8],1,param.num_leg);
 
-next_q = quaternion([next_yaw next_pitch next_roll],'eulerd','ZYX','frame');
-[w,x,y,z] = parts(next_q);
-state_next = [next_x;next_y;next_z;w;x;y;z;zeros(3,1);zeros(3,1);zeros(3,1)];
-next_p_er        = state_next(1:3);
-next_q_er        = quaternion(state_next(4:7)');
-next_R_er = quat2rotm(next_q_er);
-next_angles = 0.2*randn(3,param.num_leg) + repmat([0;-0.7;-1.8],1,param.num_leg);
-next_prf = next_R_er'*(p_wf - next_p_er);
-angle = ik(next_prf, theta, [param.lc],[param.ox(fix_foot_id);param.oy(fix_foot_id);param.d(fix_foot_id);param.lt]);
-[theta angle]
+for i=1:size(fix_foot_id_list,1)
+    fix_foot_id = fix_foot_id_list(i);
+    theta = theta_list((fix_foot_id-1)*3+1:(fix_foot_id-1)*3+3);
+    p_rf = autoFunc_fk_pf_pos(theta,[param.lc],[param.ox(fix_foot_id);param.oy(fix_foot_id);param.d(fix_foot_id);param.lt]);
+    p_wf = R_er*p_rf + p_er;  % the fix foot position in world frame
+
+
+    angle = get_joint_angle_from_foot_pos_and_body_pose(next_p_er, next_q_er, p_wf, fix_foot_id, theta, param);
+    next_angles(:,fix_foot_id) = angle;
+end
+
 % modify the next_angle_measure term corresponding to fix_foot_id
-next_angles(:,fix_foot_id) = angle;
 next_angle_measure = next_angles(:,logical(param.active_leg));
 next_angle_measure = next_angle_measure(:);
 
 next_measurement = [zeros(3,1);zeros(3,1);next_angle_measure;zeros(3,1);zeros(3,1)];
+%% generate features
+features_init;
+
+[num_visible_features, visible_feature_ids, feature_px_pos] = project_visible_features(pose_init, param);
+
+
 
 %% generate trajectory between the two stance state, especially the measurements
+
+dt = 1/150;
+traj_steps = 40;
+T = dt*(traj_steps-1);
+traj_t = 0:dt:T;
+
+% assume all features available at state_init are also avaiable on the
+% entire trajectory so we do not need to care about feature association
+
+% state: 
+%      1 2 3     4 5 6 7       8 9 10      11 12 13     14 15 16      n_rho   n_rho     n_rho     n_rho
+%    position  quaternion     velocity     acc bias    gyro bias   rho_opt1 rho_opt2 rho_opt3   rho_opt4
+% measurement
+%    1 2 3    4 5 6    7 8 9   10 11 12   13 14 15   16 17 18    19 20 21   22 23 24   25 26 27   28 29 30
+%     acc     omega    angle1   angle2     angle3    angle4         av1        av2        av3        av4
+%  fix_leg_ids can be viewed as measurement too
+
+param.state_size = 16 + param.rho_opt_size*param.num_leg;
+param.meas_size = 6 + 6*param.num_leg;
+% measurement also includes features 
+
+% not fully tested 
+[gt_state_list, meas_list] = get_traj(traj_t, pose_init, pose_next, angle_measure, fix_foot_id_list, visible_feature_ids, feature_px_pos, param);
 
 %% draw everything
 fig_id = 1;
 fig = figure(fig_id);
-set(gcf, 'units','normalized','outerposition',[0 0.2 0.3 0.7]);
+% set(gcf, 'units','normalized','outerposition',[0 0.2 0.3 0.7]);
 
 clf; hold on;
-draw_robot(fig, state_init, measurement, param, 1);
-draw_robot(fig, state_next, next_measurement, param, 0.8);
+draw_robot(fig, gt_state_list(1:7,1), meas_list(7:18,1), param, 1);
+draw_robot(fig, gt_state_list(1:7,end), meas_list(7:18,end), param, 0.8);
+% draw feature
+plot3(param.feature_x, param.feature_y, param.feature_z, 'g*');
+plot3(param.feature_x(visible_feature_ids), param.feature_y(visible_feature_ids), param.feature_z(visible_feature_ids), 'r*');
+
 % adjust view point of the figure 
-com_pos = state_init(1:3);
+com_pos = pose_init(1:3);
 set(gca,'CameraPosition',[com_pos(1)+5 com_pos(2)+5 com_pos(3)+2]);
 set(gca,'CameraTarget',[com_pos(1) com_pos(2) com_pos(3)]);
 set(gca,'CameraUpVector',[0 0 1]);
 set(gca,'CameraViewAngle',8.6765);
-set(gca, 'XLim', [com_pos(1)-1.2 com_pos(1)+1.6])
-set(gca, 'YLim', [com_pos(2)-1.2 com_pos(2)+1.2])
-set(gca, 'ZLim', [com_pos(3)-1.1 com_pos(3)+0.6])
+set(gca, 'XLim', [com_pos(1)-3.2 com_pos(1)+3.6])
+set(gca, 'YLim', [com_pos(2)-3.2 com_pos(2)+3.2])
+set(gca, 'ZLim', [com_pos(3)-2.1 com_pos(3)+2.1])
 drawnow;
+
+% most important part!
+%% start to use EKF to estimate state 
+state_init = gt_state_list(:,1);
+[est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, param);
+
+% compare est_state_list with gt_state_list;

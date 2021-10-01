@@ -1,4 +1,4 @@
-function[]= draw_robot(fig, state, measurement, param, color_factor)
+function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
 % input state
 %  1 2 3     4  5  6  7 
 % position    orientation 
@@ -6,8 +6,8 @@ function[]= draw_robot(fig, state, measurement, param, color_factor)
     % colors are ugly...
     set(0, 'CurrentFigure', fig)
     % draw robot  
-    p_er        = state(1:3);
-    q_er        = quaternion(state(4:7)');
+    p_er        = pose(1:3);
+    q_er        = quaternion(pose(4:7)');
     R_er = quat2rotm(q_er);
     
     % joint angle, automatically construct theta_list according to active
@@ -16,7 +16,7 @@ function[]= draw_robot(fig, state, measurement, param, color_factor)
     idx = 1;
     for i=1:param.num_leg 
         if param.active_leg(i) == 1
-            theta_list((i-1)*3+1:(i-1)*3+3) = measurement(6+(idx-1)*3+1:6+(idx-1)*3+3);
+            theta_list((i-1)*3+1:(i-1)*3+3) = joint_angles((idx-1)*3+1:(idx-1)*3+3);
             idx = idx + 1;
         end
     end
