@@ -129,14 +129,14 @@ end
 for i=1:traj_len
     state_list(1:3,i) = p_list(:,i);
     state_list(4:7,i) = q_list(:,i);
-    state_list(8:10,i) = dp_list(:,i);
+    state_list(8:10,i) = dp_list(:,i);  
     % rho depends on the definition in kinematics init 
     for j=1:param.num_leg
         state_list(16+j,i) = param.lc;
     end
     
     % todo: inject some noise here?
-    meas_list(1:3,i) = ddp_list(:,i);
+    meas_list(1:3,i) = R_er'*ddp_list(:,i);  % notice this does not have gravity
     meas_list(4:6,i) = w_list(:,i);
     meas_list(7:18,i) = joint_angle_list(:,i);
     meas_list(19:30,i) = joint_av_list(:,i);

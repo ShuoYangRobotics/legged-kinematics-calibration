@@ -4,6 +4,7 @@ function r = ekf_leg_residual(state, meas, param)
 % meas contains the projected feature locations of the robot
 body_p = state(1:3);
 body_q = quaternion(state(4:7)');
+R_er = quat2rotm(body_q);
 body_v = state(8:10);
 
 joint_angle_list = meas(7:18);
@@ -20,7 +21,7 @@ for i = 1:param.num_leg
     J_rf = autoFunc_d_fk_dt(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     % it seems velocity on y direction cannot be very correctly infered 
     leg_v = (-J_rf*av-skew(omega)*p_rf);
-    r((i-1)*3+1:(i-1)*3+3) = body_v - leg_v;
+    r((i-1)*3+1:(i-1)*3+3) = body_v - R_er*leg_v;
 end
 
 
