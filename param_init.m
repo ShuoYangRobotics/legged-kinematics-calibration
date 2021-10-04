@@ -26,3 +26,14 @@ param.R_rc = [ 0  0 1;
 param.focus_len = 1;
 param.horiz_film = 0.4;
 param.verti_film = 0.3;
+
+% noise of sensor measurement
+param.noise_acc_bias = 1e-4;
+param.noise_gyro_bias = 1e-4;
+param.noise_rho = 1e-4;
+
+param.noise_acc = 1e-4;
+param.noise_gyro = 1e-4;
+param.noise_ja = 1e-4;
+param.noise_jav = 1e-4;
+param.noise_feature_px = 1e-4;

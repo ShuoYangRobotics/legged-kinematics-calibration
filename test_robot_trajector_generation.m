@@ -30,7 +30,7 @@ measurement = [zeros(3,1);zeros(3,1);angle_measure;zeros(3,1);zeros(3,1)];
 %% generate another stance
 % % generate new stance location 
 next_x = tgt_x + 0.07+0.03*(2*randn-1);
-next_y = tgt_y + 0.01+0.03*(2*randn-1);
+next_y = tgt_y + 0.01+0.01*(2*randn-1);
 next_z = tgt_z + 0.01+0.02*(2*randn-1);
 next_yaw = tgt_yaw+3;
 next_pitch = tgt_pitch;
@@ -45,7 +45,7 @@ next_q_er        = quaternion(pose_next(4:7)');
 % calculate leg angles at new stance
 param.num_fix_foot = 2;
 fix_foot_id_list = [1;2;3;4];
-disp(['fix foot '  num2str(fix_foot_id')])
+disp(['fix foot '  num2str(fix_foot_id_list')])
 % calculate fix foot_position
 p_er        = pose_init(1:3);
 q_er        = quaternion(pose_init(4:7)');
@@ -133,9 +133,59 @@ set(gca, 'YLim', [com_pos(2)-3.2 com_pos(2)+3.2])
 set(gca, 'ZLim', [com_pos(3)-2.1 com_pos(3)+2.1])
 drawnow;
 
+
+fig_id = 2;
+fig2 = figure(fig_id);
+subplot(3,1,1)
+plot(traj_t, gt_state_list(1,:));hold on;
+plot(traj_t, gt_state_list(2,:));hold on;
+plot(traj_t, gt_state_list(3,:));hold on;
+subplot(3,1,2)
+plot(traj_t, gt_state_list(8,:));hold on;
+plot(traj_t, gt_state_list(9,:));hold on;
+plot(traj_t, gt_state_list(10,:));hold on;
+subplot(3,1,3)
+plot(traj_t, meas_list(1,:));hold on;
+plot(traj_t, meas_list(2,:));hold on;
+plot(traj_t, meas_list(3,:));hold on;
+
 % most important part!
 %% start to use EKF to estimate state 
-state_init = gt_state_list(:,1);
-[est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, param);
+% test measurement models
+test_id = 10;
+% camera jacobian
+cam_r = ekf_feature_residual(gt_state_list(:,test_id), meas_list(:,test_id), visible_feature_ids, param);
+cam_r_jac = ekf_feature_residual_jac(gt_state_list(:,test_id), meas_list(:,test_id), visible_feature_ids, param);
+
+% leg jacobian
+leg_r = ekf_leg_residual(gt_state_list(:,test_id), meas_list(:,test_id), param);
+leg_r_jac = ekf_leg_residual_jac(gt_state_list(:,test_id), meas_list(:,test_id), param);
+leg_r
+
+delta_x = zeros(param.state_size-1,1);
+delta_x(1:6) = 0.01*(2*randn(6,1)-1);
+new_state = gt_state_list(:,test_id);
+new_state(1:3) = new_state(1:3) + delta_x(1:3);
+new_q = quat_expmap(quaternion(new_state(4:7)'), delta_x(4:6));
+[new_state(4),new_state(5),new_state(6),new_state(7)] = parts(new_q);
+new_r = ekf_feature_residual(new_state, meas_list(:,test_id), visible_feature_ids, param);
+new_diff_r = cam_r + cam_r_jac*delta_x;
+[gt_state_list(:,test_id) new_state]
+[new_r new_diff_r]
+sum(new_r-new_diff_r)
+
+delta_x = 0.01*(2*randn(param.state_size-1,1)-1);
+new_state = gt_state_list(:,test_id);
+new_state(1:3) = new_state(1:3) + delta_x(1:3);
+new_q = quat_expmap(quaternion(new_state(4:7)'), delta_x(4:6));
+[new_state(4),new_state(5),new_state(6),new_state(7)] = parts(new_q);
+new_state(8:end) = new_state(8:end) + delta_x(7:end);
+new_leg_r = ekf_leg_residual(new_state, meas_list(:,test_id), param);
+new_diff_leg_r = leg_r + leg_r_jac*delta_x;
+[new_leg_r new_diff_leg_r]
+sum(new_leg_r-new_diff_leg_r)
+
+% state_init = gt_state_list(:,1);
+% [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, param);
 
 % compare est_state_list with gt_state_list;
