@@ -6,16 +6,20 @@ function [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_fo
 traj_len = max(size(traj_t));
 dt = traj_t(3)-traj_t(2);
 est_state_list = zeros(param.state_size, traj_len);
-
+    
+    
 est_state_list(:,1) = state_init;
+for j=1:param.num_leg
+  est_state_list(16+j,1) = est_state_list(16+j,1) + 0.5*randn;
+end
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance
 P = eye(param.state_size-1);
 
 % constant parameters 
-V = 0.01*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-V(2*num_visual_features+1:end,2*num_visual_features+1:end) = 10*eye(3*max(size(fix_foot_id_list)));
+V = 0.00001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
+V(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
 
 
 for i=2:traj_len
@@ -37,7 +41,7 @@ for i=2:traj_len
     
     K = P*H'*inv(H*P*H'+V);
     
-    delta_x = K*r;
+    delta_x = K*(0-r);
     P = (eye(param.state_size-1) - K*H)*P;
     est_state_list(:,i) = ekf_state_update(est_state_list(:,i), delta_x);
 end
