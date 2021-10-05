@@ -130,35 +130,43 @@ state_init = gt_state_list(:,1);
 % compare est_state_list with gt_state_list;
 [est_state_list(:,1) est_state_list(:,end) gt_state_list(:,end) gt_state_list(:,1)]
 figure(3)
-subplot(4,2,1)
+subplot(5,2,1)
 plot(traj_t, est_state_list(1,:),traj_t, gt_state_list(1,:))
 title('Position X')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,2)
+subplot(5,2,2)
 plot(traj_t, est_state_list(2,:),traj_t, gt_state_list(2,:))
 title('Position Y')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,3)
+subplot(5,2,3)
 plot(traj_t, est_state_list(3,:),traj_t, gt_state_list(3,:))
 title('Position Z')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,4)
+subplot(5,2,4)
 plot(traj_t, est_state_list(8,:),traj_t, gt_state_list(8,:))
 title('Velocity X')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,5)
+subplot(5,2,5)
 plot(traj_t, est_state_list(9,:),traj_t, gt_state_list(9,:))
 title('Velocity Y')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,6)
+subplot(5,2,6)
 plot(traj_t, est_state_list(10,:),traj_t, gt_state_list(10,:))
 title('Velocity Z')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,7)
+subplot(5,2,7)
+plot(traj_t, est_state_list(17,:),traj_t, gt_state_list(17,:))
+title('FL lc')
+legend('Estimation', 'Ground Truth');
+subplot(5,2,8)
+plot(traj_t, est_state_list(18,:),traj_t, gt_state_list(18,:))
+title('FR lc')
+legend('Estimation', 'Ground Truth');
+subplot(5,2,9)
 plot(traj_t, est_state_list(19,:),traj_t, gt_state_list(19,:))
 title('RL lc')
 legend('Estimation', 'Ground Truth');
-subplot(4,2,8)
+subplot(5,2,10)
 plot(traj_t, est_state_list(20,:),traj_t, gt_state_list(20,:))
 title('RR lc')
 legend('Estimation', 'Ground Truth');
