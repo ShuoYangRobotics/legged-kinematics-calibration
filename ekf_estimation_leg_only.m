@@ -1,4 +1,4 @@
-function [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
+function [est_state_list] = ekf_estimation_leg_only(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
 % most important function!
 
 % gt_state_list just for debug and compare 
@@ -26,8 +26,8 @@ P(10:13,10:13) = 0.05*eye(4);
 Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.1*ones(4,1)]);
 
 % measurement noise
-R = 0.001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
+R = 0.001*eye(3*max(size(fix_foot_id_list)));
+R(1:end,1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
 
 
 for i=2:traj_len-1
@@ -52,12 +52,12 @@ for i=2:traj_len-1
     cam_r_jac = ekf_feature_residual_jac(est_state_list(:,i), meas_list(:,i), visible_feature_ids, param);
     leg_r_jac = ekf_leg_residual_jac(est_state_list(:,i), meas_list(:,i), param);
 
-    r = [cam_r;leg_r];
-    H = [cam_r_jac; leg_r_jac];
+    r = [leg_r];
+    H = [leg_r_jac];
     
     % joint angle noise
     leg_r_noise = ekf_leg_noise_jac(est_state_list(:,i), meas_list(:,i), dt, param);
-    R(2*num_visual_features+1:end,2*num_visual_features+1:end) = R(2*num_visual_features+1:end,2*num_visual_features+1:end) +  leg_r_noise;
+    R = R +  leg_r_noise;
     
     K = P*H'*inv(H*P*H'+R);
 

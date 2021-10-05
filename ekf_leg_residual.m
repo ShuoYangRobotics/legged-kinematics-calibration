@@ -16,7 +16,7 @@ for i = 1:param.num_leg
     angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
     av = joint_av_list((i-1)*3+1:(i-1)*3+3);
     % get opt rho TODO: check dimension here
-    rho_opt = state(16+i,1);
+    rho_opt = state(10+i,1);
     p_rf = autoFunc_fk_pf_pos(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     J_rf = autoFunc_d_fk_dt(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     % it seems velocity on y direction cannot be very correctly infered 

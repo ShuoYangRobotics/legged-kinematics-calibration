@@ -3,8 +3,8 @@ function jac = ekf_leg_noise_jac(state, meas, dt, param)
 % jac is 12x12, which is the same as leg_r
 
 V = zeros(6,6);
-V(1:3,1:3) = 0.1;  % joint angle noise
-V(4:6,4:6) = 0.1;  % joint angular velocity noise
+V(1:3,1:3) = 0.001;  % joint angle noise
+V(4:6,4:6) = 0.001;  % joint angular velocity noise
 
 J = zeros(12, 6);
 
@@ -21,7 +21,7 @@ for i = 1:param.num_leg
     angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
     av = joint_av_list((i-1)*3+1:(i-1)*3+3);
     % get opt rho TODO: check dimension here
-    rho_opt = state(16+i,1);
+    rho_opt = state(10+i,1);
     p_rf = autoFunc_fk_pf_pos(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     J_rf = autoFunc_d_fk_dt(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     

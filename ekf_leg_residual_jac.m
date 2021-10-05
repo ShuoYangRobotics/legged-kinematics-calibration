@@ -15,7 +15,7 @@ for i = 1:param.num_leg
     angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
     av = joint_av_list((i-1)*3+1:(i-1)*3+3);
     % get opt rho TODO: check dimension here
-    rho_opt = state(16+i,1);
+    rho_opt = state(10+i,1);
     p_rf = autoFunc_fk_pf_pos(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     J_rf = autoFunc_d_fk_dt(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     leg_v = (-J_rf*av-skew(omega)*p_rf);
@@ -30,7 +30,7 @@ for i = 1:param.num_leg
     dJdrho = autoFunc_dJ_drho(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     dfdrho = autoFunc_d_fk_drho(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
     g = -R_er*(kron(av',eye(3))*dJdrho+skew(omega)*dfdrho);
-    jac((i-1)*3+1:(i-1)*3+3,15+i) = -g;
+    jac((i-1)*3+1:(i-1)*3+3,9+i) = -g;
     
 end
 

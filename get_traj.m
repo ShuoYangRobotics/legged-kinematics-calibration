@@ -105,18 +105,16 @@ feature_pt_pos_list(:,1) = feature_px_pos_init;
 
 % !!!! very important
 for j=1:param.num_leg
-    state_list(16+j,1) = param.lc;
+    state_list(10+j,1) = param.lc;
 end
     
 for i=2:traj_len
     next_p_er = p_list(:,i);
     next_q_er = quaternion(q_list(:,i)');
     
-    % !!!! very important, change actual leg length
-%     param.lc = 0.2-sin(i/traj_len*pi)*0.05;
     % rho depends on the definition in kinematics init 
     for j=1:param.num_leg
-        state_list(16+j,i) = param.lc;
+        state_list(10+j,i) = param.lc;
     end
     
     for j = 1:param.num_leg
@@ -134,6 +132,7 @@ for i=2:traj_len
     joint_av_list(:,i) = (joint_angle_list(:,i) - joint_angle_list(:,i-1))/traj_dt(i);
     
     feature_pt_pos_list(:,i) = project_features(next_p_er, next_q_er, visible_feature_ids, param);
+    param.lc = 0.2;
 end
 
 

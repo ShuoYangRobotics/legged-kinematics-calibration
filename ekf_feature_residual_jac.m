@@ -21,7 +21,7 @@ for i = 1:num_visual_features
     % first follows
     % https://intra.ece.ucr.edu/~mourikis/papers/Li2013IJRR.pdf eqn 41 42 not working very well
     % then derive it again following https://arxiv.org/pdf/1711.02508.pdf eqn 188
-    jac((i-1)*2+1:(i-1)*2+2,:) =  -Jac_cam_proj*param.R_rc'*[-R_er' skew(R_er'*(features_w - p_er)) zeros(3, 9+param.rho_opt_size*param.num_leg)];                  
+    jac((i-1)*2+1:(i-1)*2+2,:) =  -Jac_cam_proj*param.R_rc'*[-R_er' skew(R_er'*(features_w - p_er)) zeros(3, 3+param.rho_opt_size*param.num_leg)];                  
 end
 
 
