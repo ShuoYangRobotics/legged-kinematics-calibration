@@ -103,9 +103,22 @@ joint_angle_list(:,1) = angle_init;
 feature_pt_pos_list = zeros(feature_meas_size, traj_len);
 feature_pt_pos_list(:,1) = feature_px_pos_init;
 
+% !!!! very important
+for j=1:param.num_leg
+    state_list(16+j,1) = param.lc;
+end
+    
 for i=2:traj_len
     next_p_er = p_list(:,i);
     next_q_er = quaternion(q_list(:,i)');
+    
+    % !!!! very important, change actual leg length
+%     param.lc = 0.2-sin(i/traj_len*pi)*0.05;
+    % rho depends on the definition in kinematics init 
+    for j=1:param.num_leg
+        state_list(16+j,i) = param.lc;
+    end
+    
     for j = 1:param.num_leg
         mask = fix_foot_id_list(:) == j;
         if any(mask) 
@@ -130,10 +143,6 @@ for i=1:traj_len
     state_list(1:3,i) = p_list(:,i);
     state_list(4:7,i) = q_list(:,i);
     state_list(8:10,i) = dp_list(:,i);  
-    % rho depends on the definition in kinematics init 
-    for j=1:param.num_leg
-        state_list(16+j,i) = param.lc;
-    end
     
     % todo: inject some noise here?
     meas_list(1:3,i) = R_er'*ddp_list(:,i);  % notice this does not have gravity

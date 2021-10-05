@@ -27,7 +27,7 @@ features_init;
 %% generate another stance
 % % generate new stance location 
 next_x = tgt_x + 0.07+0.03*(2*randn-1);
-next_y = tgt_y + 0.01+0.01*(2*randn-1);
+next_y = tgt_y + 0.02+0.01*(2*randn-1);
 next_z = tgt_z + 0.01+0.02*(2*randn-1);
 next_yaw = tgt_yaw+3;
 next_pitch = tgt_pitch;
@@ -42,8 +42,8 @@ pose_next = [next_x;next_y;next_z;w;x;y;z];
 fix_foot_id_list = [1;2;3;4];
 disp(['fix foot '  num2str(fix_foot_id_list')])
 
-dt = 1/150;
-traj_steps = 40;
+dt = 1/200;
+traj_steps = 66;
 T = dt*(traj_steps-1);
 traj_t = 0:dt:T;
 
@@ -107,50 +107,58 @@ new_r = ekf_feature_residual(new_state, meas_list(:,test_id), visible_feature_id
 new_diff_r = cam_r + cam_r_jac*delta_x;
 [gt_state_list(:,test_id) new_state]
 [new_r new_diff_r]
-sum(new_r-new_diff_r)  % still large, may need to further check. Or maybe the camera projection is too nonlinear by nature
+sum(new_r-new_diff_r)/max(size(new_diff_r))  % still large, may need to further check. Or maybe the camera projection is too nonlinear by nature
 
 delta_x = 0.01*(2*randn(param.state_size-1,1)-1);
 new_state=ekf_state_update(gt_state_list(:,test_id), delta_x);
 new_leg_r = ekf_leg_residual(new_state, meas_list(:,test_id), param);
 new_diff_leg_r = leg_r + leg_r_jac*delta_x;
 [new_leg_r new_diff_leg_r]
-sum(new_leg_r-new_diff_leg_r)  % pass
+sum(new_leg_r-new_diff_leg_r)/max(size(new_diff_leg_r))  % pass
 
 next_state = ekf_process(gt_state_list(:,test_id), meas_list(:,test_id), dt, param);
 next_state_jac = ekf_process_jac(gt_state_list(:,test_id), meas_list(:,test_id), dt, param);
 % [gt_state_list(:,test_id) gt_state_list(:,test_id+1) next_state]
 new_next_state = ekf_process(new_state, meas_list(:,test_id), dt, param);
 new_diff_next_state = ekf_state_update(next_state,next_state_jac*delta_x);
-sum(new_next_state-new_diff_next_state)                        % pass
+sum(new_next_state-new_diff_next_state)/max(size(new_diff_next_state))                     % pass
 
 %% start to use EKF to estimate state 
 state_init = gt_state_list(:,1);
 [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param);
 
 % compare est_state_list with gt_state_list;
-[est_state_list(:,end) gt_state_list(:,end) gt_state_list(:,1)]
+[est_state_list(:,1) est_state_list(:,end) gt_state_list(:,end) gt_state_list(:,1)]
 figure(3)
 subplot(4,2,1)
 plot(traj_t, est_state_list(1,:),traj_t, gt_state_list(1,:))
 title('Position X')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,2)
 plot(traj_t, est_state_list(2,:),traj_t, gt_state_list(2,:))
 title('Position Y')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,3)
 plot(traj_t, est_state_list(3,:),traj_t, gt_state_list(3,:))
 title('Position Z')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,4)
 plot(traj_t, est_state_list(8,:),traj_t, gt_state_list(8,:))
 title('Velocity X')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,5)
 plot(traj_t, est_state_list(9,:),traj_t, gt_state_list(9,:))
 title('Velocity Y')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,6)
 plot(traj_t, est_state_list(10,:),traj_t, gt_state_list(10,:))
 title('Velocity Z')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,7)
 plot(traj_t, est_state_list(19,:),traj_t, gt_state_list(19,:))
 title('RL lc')
+legend('Estimation', 'Ground Truth');
 subplot(4,2,8)
 plot(traj_t, est_state_list(20,:),traj_t, gt_state_list(20,:))
 title('RR lc')
+legend('Estimation', 'Ground Truth');
