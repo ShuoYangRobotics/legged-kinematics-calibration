@@ -10,7 +10,6 @@ est_state_list = zeros(param.state_size, traj_len);
     
 est_state_list(:,1) = state_init;
 for j=1:param.num_leg
-%   est_state_list(16+j,1) = est_state_list(16+j,1) + 0.05*randn;
   est_state_list(16+j,1) = est_state_list(16+j,1) + 0.05*randn;
 end
 num_visual_features = max(size(visible_feature_ids));
@@ -18,15 +17,15 @@ num_visual_features = max(size(visible_feature_ids));
 % estimation covariance
 P = 0.00001*eye(param.state_size-1);
 % P(7:9,7:9) = 0.0001*eye(3);
-P(16:19,16:19) = 0.005*eye(4);
+P(16:19,16:19) = 0.05*eye(4);
 
 % constant parameters 
 % process noise  angle, velocity, rho
-Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.5*ones(1,1)]);
+Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.1*ones(1,1)]);
 
 % measurement noise
 R = 0.001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.00001*eye(3*max(size(fix_foot_id_list)));
+R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
 
 
 for i=2:traj_len-1

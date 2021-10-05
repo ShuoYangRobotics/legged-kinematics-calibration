@@ -3,8 +3,8 @@ function jac = ekf_leg_noise_jac(state, meas, dt, param)
 % jac is 12x12, which is the same as leg_r
 
 V = zeros(6,6);
-V(1:3,1:3) = 0.01;  % joint angle noise
-V(4:6,4:6) = 0.01;  % joint angular velocity noise
+V(1:3,1:3) = 0.1;  % joint angle noise
+V(4:6,4:6) = 0.1;  % joint angular velocity noise
 
 J = zeros(12, 6);
 
