@@ -29,7 +29,7 @@ Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.1*ones(4,1)]);
 R = 0.001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
 R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
 
-
+W = zeros(param.state_size-1, param.state_size-1);
 for i=2:traj_len-1
     % integrate state
     est_state_list(:,i) = ekf_process(est_state_list(:,i-1), meas_list(:,i), dt, param);
@@ -64,8 +64,13 @@ for i=2:traj_len-1
     delta_x = K*(0-r);
     P = (eye(param.state_size-1) - K*H)*P;
     est_state_list(:,i) = ekf_state_update(est_state_list(:,i), delta_x);
-    O=[H;H*F;H*F^2;H*F^3;H*F^4];
-    rank(O)
+    % for linear invariant system this is correct
+%     O=[H;H*F;H*F^2;H*F^3;H*F^4];
+%     rank(O)
+    % for linear variant system we need observablity gramian
+    W = W + (F')^(i-2)*H'*H*(F)^(i-2);
+    rank(W)
+    
 end
 est_state_list(:,traj_len) = est_state_list(:,traj_len-1);
 

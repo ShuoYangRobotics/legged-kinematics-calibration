@@ -26,8 +26,8 @@ features_init;
 
 %% generate another stance
 % % generate new stance location 
-next_x = tgt_x + 0.07+0.03*(2*randn-1);
-next_y = tgt_y + 0.02+0.01*(2*randn-1);
+next_x = tgt_x + 0.15+0.03*(2*randn-1);
+next_y = tgt_y + 0.12+0.01*(2*randn-1);
 next_z = tgt_z + 0.01+0.02*(2*randn-1);
 next_yaw = tgt_yaw+3;
 next_pitch = tgt_pitch;
@@ -156,19 +156,19 @@ title('Vision + Leg - Velocity Z')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,7)
 plot(traj_t, est_state_list(11,:),traj_t, gt_state_list(11,:))
-title('Vision + Leg - FL lc')
+title('Vision + Leg - FL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,8)
 plot(traj_t, est_state_list(12,:),traj_t, gt_state_list(12,:))
-title('Vision + Leg - FR lc')
+title('Vision + Leg - FR last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,9)
 plot(traj_t, est_state_list(13,:),traj_t, gt_state_list(13,:))
-title('Vision + Leg - RL lc')
+title('Vision + Leg - RL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,10)
 plot(traj_t, est_state_list(14,:),traj_t, gt_state_list(14,:))
-title('Vision + Leg - RR lc')
+title('Vision + Leg - RR last link length')
 legend('Estimation', 'Ground Truth');
 
 %% EKF vision only 
@@ -204,19 +204,19 @@ title('Vison Only - Velocity Z')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,7)
 plot(traj_t, est_state_list(11,:),traj_t, gt_state_list(11,:))
-title('Vison Only - FL lc')
+title('Vison Only - FL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,8)
 plot(traj_t, est_state_list(12,:),traj_t, gt_state_list(12,:))
-title('Vison Only - FR lc')
+title('Vison Only - FR last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,9)
 plot(traj_t, est_state_list(13,:),traj_t, gt_state_list(13,:))
-title('Vison Only - RL lc')
+title('Vison Only - RL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,10)
 plot(traj_t, est_state_list(14,:),traj_t, gt_state_list(14,:))
-title('Vison Only - RR lc')
+title('Vison Only - RR last link length')
 legend('Estimation', 'Ground Truth');
 
 %% EKF leg only 
@@ -252,17 +252,17 @@ title('Leg Only - Velocity Z')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,7)
 plot(traj_t, est_state_list(11,:),traj_t, gt_state_list(11,:))
-title('Leg Only - FL lc')
+title('Leg Only - FL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,8)
 plot(traj_t, est_state_list(12,:),traj_t, gt_state_list(12,:))
-title('Leg Only - FR lc')
+title('Leg Only - FR last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,9)
 plot(traj_t, est_state_list(13,:),traj_t, gt_state_list(13,:))
-title('Leg Only - RL lc')
+title('Leg Only - RL last link length')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,10)
 plot(traj_t, est_state_list(14,:),traj_t, gt_state_list(14,:))
-title('Leg Only - RR lc')
+title('Leg Only - RR last link length')
 legend('Estimation', 'Ground Truth');
