@@ -89,7 +89,7 @@ fix_foot_pos_list = zeros(3,size(fix_foot_id_list,1));
 for i=1:size(fix_foot_id_list,1)
     fix_foot_id = fix_foot_id_list(i);
     theta = angle_init((fix_foot_id-1)*3+1:(fix_foot_id-1)*3+3);
-    p_rf = autoFunc_fk_pf_pos(theta,[param.lc],[param.ox(fix_foot_id);param.oy(fix_foot_id);param.d(fix_foot_id);param.lt]);
+    p_rf = autoFunc_fk_pf_pos(theta,param.rho_opt_true(:,fix_foot_id),param.rho_fix(:,fix_foot_id));
     fix_foot_pos_list(:,i) = R_er*p_rf + p_er;  % the fix foot position in world frame
 
 end
@@ -102,20 +102,10 @@ joint_angle_list(:,1) = angle_init;
 % generate camera feature measurements
 feature_pt_pos_list = zeros(feature_meas_size, traj_len);
 feature_pt_pos_list(:,1) = feature_px_pos_init;
-
-% !!!! very important
-for j=1:param.num_leg
-    state_list(10+j,1) = param.lc;
-end
     
 for i=2:traj_len
     next_p_er = p_list(:,i);
     next_q_er = quaternion(q_list(:,i)');
-    
-    % rho depends on the definition in kinematics init 
-    for j=1:param.num_leg
-        state_list(10+j,i) = param.lc;
-    end
     
     for j = 1:param.num_leg
         mask = fix_foot_id_list(:) == j;
@@ -132,7 +122,6 @@ for i=2:traj_len
     joint_av_list(:,i) = (joint_angle_list(:,i) - joint_angle_list(:,i-1))/traj_dt(i);
     
     feature_pt_pos_list(:,i) = project_features(next_p_er, next_q_er, visible_feature_ids, param);
-    param.lc = 0.2;
 end
 
 
@@ -142,6 +131,11 @@ for i=1:traj_len
     state_list(1:3,i) = p_list(:,i);
     state_list(4:7,i) = q_list(:,i);
     state_list(8:10,i) = dp_list(:,i);  
+    
+    % rho depends on the definition in kinematics init 
+    for j=1:param.num_leg
+        state_list(10+(j-1)*param.rho_opt_size+1:10+j*param.rho_opt_size,i) = param.rho_opt_true(:,j);
+    end
     
     % todo: inject some noise here?
     meas_list(1:3,i) = R_er'*ddp_list(:,i);  % notice this does not have gravity

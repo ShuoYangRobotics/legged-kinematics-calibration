@@ -1,6 +1,6 @@
 %% init necessary parameters
 % init kinematics parameter
-% kinematics_init;
+% kinematics_init_lc;
 % init parameter
 % param_init;
 
@@ -58,7 +58,7 @@ traj_t = 0:dt:T;
 %     acc     omega    angle1   angle2     angle3    angle4         av1        av2        av3        av4
 %  fix_leg_ids can be viewed as measurement too
 
-param.state_size = 16 + param.rho_opt_size*param.num_leg;
+param.state_size = 10 + param.rho_opt_size*param.num_leg;
 param.meas_size = 6 + 6*param.num_leg;
 
 % not fully tested 
@@ -128,7 +128,7 @@ state_init = gt_state_list(:,1);
 [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param);
 
 % compare est_state_list with gt_state_list;
-[est_state_list(:,1) est_state_list(:,end) gt_state_list(:,end) gt_state_list(:,1)]
+[est_state_list(:,1) est_state_list(:,end) gt_state_list(:,1) gt_state_list(:,end) ]
 figure(3)
 subplot(5,2,1)
 plot(traj_t, est_state_list(1,:),traj_t, gt_state_list(1,:))
@@ -155,18 +155,22 @@ plot(traj_t, est_state_list(10,:),traj_t, gt_state_list(10,:))
 title('Velocity Z')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,7)
-plot(traj_t, est_state_list(17,:),traj_t, gt_state_list(17,:))
+plot(traj_t, est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,:),...
+    traj_t, gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,:))
 title('FL lc')
-legend('Estimation', 'Ground Truth');
+legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,8)
-plot(traj_t, est_state_list(18,:),traj_t, gt_state_list(18,:))
+plot(traj_t, est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,:),...
+    traj_t, gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,:))
 title('FR lc')
-legend('Estimation', 'Ground Truth');
+legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,9)
-plot(traj_t, est_state_list(19,:),traj_t, gt_state_list(19,:))
+plot(traj_t, est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,:),...
+    traj_t, gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,:))
 title('RL lc')
-legend('Estimation', 'Ground Truth');
+legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,10)
-plot(traj_t, est_state_list(20,:),traj_t, gt_state_list(20,:))
+plot(traj_t, est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,:),...
+    traj_t, gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,:))
 title('RR lc')
-legend('Estimation', 'Ground Truth');
+legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);

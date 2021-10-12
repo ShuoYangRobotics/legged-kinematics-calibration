@@ -29,21 +29,21 @@ function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
         if param.active_leg(i) == 1
             theta = theta_list((i-1)*3+1:(i-1)*3+3);
             % draw hip
-            p_rhip = autoFunc_fk_hip_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
-            R_rhip = autoFunc_fk_hip_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_rhip = autoFunc_fk_hip_pos(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
+            R_rhip = autoFunc_fk_hip_rot(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
             p_ehip = R_er*p_rhip + p_er;
             R_ehip = R_er*R_rhip;
             draw_cube(fig, p_ehip, R_ehip, 0.05,0.16,0.05,color_factor*[0.2 0.6 1])
 
             % draw thigh
-            p_rthigh = autoFunc_fk_thigh_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
-            R_rthigh = autoFunc_fk_thigh_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_rthigh = autoFunc_fk_thigh_pos(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
+            R_rthigh = autoFunc_fk_thigh_rot(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
             p_ethigh = R_er*p_rthigh + p_er;
             R_ethigh = R_er*R_rthigh;
             draw_cube(fig, p_ethigh, R_ethigh, 0.03,0.03,param.lt,color_factor*[0.8 0.2 1])
             % draw calf
-            p_rcalf = autoFunc_fk_calf_pos(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
-            R_rcalf = autoFunc_fk_calf_rot(theta,[param.lc],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+            p_rcalf = autoFunc_fk_calf_pos(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
+            R_rcalf = autoFunc_fk_calf_rot(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
             p_ecalf = R_er*p_rcalf + p_er;
             R_ecalf = R_er*R_rcalf;
             draw_cube(fig, p_ecalf, R_ecalf, 0.03,0.03,param.lt,color_factor*[0.5 0.5 0.8])

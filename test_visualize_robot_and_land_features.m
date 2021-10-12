@@ -1,6 +1,6 @@
 %% init necessary parameters
 % init kinematics parameter
-% kinematics_init;
+% kinematics_init_lc;
 % init parameter
 param_init;
 

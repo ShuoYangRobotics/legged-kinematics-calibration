@@ -15,9 +15,9 @@ for i = 1:param.num_leg
     angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
     av = joint_av_list((i-1)*3+1:(i-1)*3+3);
     % get opt rho TODO: check dimension here
-    rho_opt = state(10+i,1);
-    p_rf = autoFunc_fk_pf_pos(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
-    J_rf = autoFunc_d_fk_dt(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+    rho_opt = state(10+(i-1)*param.rho_opt_size+1:10+i*param.rho_opt_size,1);
+    p_rf = autoFunc_fk_pf_pos(angle,rho_opt,param.rho_fix(:,i));
+    J_rf = autoFunc_d_fk_dt(angle,rho_opt,param.rho_fix(:,i));
     leg_v = (-J_rf*av-skew(omega)*p_rf);
     
     % position 0
@@ -27,10 +27,10 @@ for i = 1:param.num_leg
     % velocity
     jac((i-1)*3+1:(i-1)*3+3,7:9) = eye(3);
     % rho_opt
-    dJdrho = autoFunc_dJ_drho(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
-    dfdrho = autoFunc_d_fk_drho(angle,[rho_opt],[param.ox(i);param.oy(i);param.d(i);param.lt]);
+    dJdrho = autoFunc_dJ_drho(angle,rho_opt,param.rho_fix(:,i));
+    dfdrho = autoFunc_d_fk_drho(angle,rho_opt,param.rho_fix(:,i));
     g = -R_er*(kron(av',eye(3))*dJdrho+skew(omega)*dfdrho);
-    jac((i-1)*3+1:(i-1)*3+3,9+i) = -g;
+    jac((i-1)*3+1:(i-1)*3+3,9+(i-1)*param.rho_opt_size+1:9+i*param.rho_opt_size) = -g;
     
 end
 

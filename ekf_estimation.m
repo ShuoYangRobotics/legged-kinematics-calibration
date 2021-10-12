@@ -13,7 +13,8 @@ est_state_list(:,1) = state_init;
 %   est_state_list(10+j,1) = est_state_list(10+j,1) + 0.05*randn;
 % %   est_state_list(16+j,1) = est_state_list(16+j,1);
 % end
-est_state_list(11:14,1) = [0.25;0.3;0.14;0.12];
+% random initial rho_opt
+est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:);
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance
@@ -27,7 +28,7 @@ Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.1*ones(4,1)]);
 
 % measurement noise
 R = 0.001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0001*eye(3*max(size(fix_foot_id_list)));
+R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0000001*eye(3*max(size(fix_foot_id_list)));
 
 W = zeros(param.state_size-1, param.state_size-1);
 for i=2:traj_len-1
