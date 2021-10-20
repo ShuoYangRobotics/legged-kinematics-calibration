@@ -155,22 +155,22 @@ plot(traj_t, est_state_list(10,:),traj_t, gt_state_list(10,:))
 title('Velocity Z')
 legend('Estimation', 'Ground Truth');
 subplot(5,2,7)
-plot(traj_t, est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,:),...
+plot(traj_t, est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,:),'-.',...
     traj_t, gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,:))
-title('FL lc')
+title(strcat('FL', {' '}, {' '}, param.rho_opt_str));
 legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,8)
-plot(traj_t, est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,:),...
+plot(traj_t, est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,:),'-.',...
     traj_t, gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,:))
-title('FR lc')
+title(strcat('FR', {' '}, {' '}, param.rho_opt_str));
 legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,9)
-plot(traj_t, est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,:),...
+plot(traj_t, est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,:),'-.',...
     traj_t, gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,:))
-title('RL lc')
+title(strcat('RL', {' '}, {' '}, param.rho_opt_str));
 legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 subplot(5,2,10)
-plot(traj_t, est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,:),...
+plot(traj_t, est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,:),'-.',...
     traj_t, gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,:))
-title('RR lc')
+title(strcat('RR', {' '}, {' '}, param.rho_opt_str));
 legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);

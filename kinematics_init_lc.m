@@ -166,6 +166,7 @@ test_kinematics_function_generation_lc
 %% put some necessary variables in param struct
 param.rho_opt_size = size(rho_opt,1);
 param.rho_fix_size = size(rho_fix,1);
+param.rho_opt_str = 'l_c';
 
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];

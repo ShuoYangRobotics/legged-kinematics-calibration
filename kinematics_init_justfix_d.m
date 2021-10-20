@@ -7,22 +7,21 @@
 addpath('unitree_A1/mr')
 
 %% modify this section is parameters to be estimated are different
-% % estimate cx cy cz
+% % estimate lc ox;oy;lt;lc
 % parameters (align with paper)
 %     -    ox, the x direction offset from body center to leg base
 %     -    oy, the y direction offset from body center to leg base
 %     -     d, the offset from thigh motor to calf motor
 %     -    lt, the upper leg (thigh) length
-%     -    lc, the lower leg (calf) length   
+%     -    lc, the lower leg (calf) length   ( to be estimated)
 %     -    t1 t2 t3, the joint angles theta
 %     -    dt1 dt2 dt3, the joint angular velocity
-%     -    cx cy cz                                      (to be estimated)
 
-syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz real
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 real
 % determine estimation size and fix size
 theta = [t1;t2;t3];
-rho_opt = [cx;cy;cz];
-rho_fix = [ox;oy;d;lt;lc];
+rho_opt = [ox;oy;lt;lc];
+rho_fix = [d];
 
 % joint 1 w and q
 w1 = [1;0;0];
@@ -56,9 +55,9 @@ p_calf = [   ox;
           -lt-lc/2];
 
 % end effector home position  
-pf = [   ox+cx;
-       oy+d+cy;
-     -lt-lc+cz];
+pf = [   ox;
+       oy+d;
+     -lt-lc];
 
 % forward kinematics of hip motor
 Slist = [[w1;-cross(w1,pq1)]];
@@ -162,12 +161,12 @@ matlabFunction(dJ_drho,...
     'outputs',{'dJ_drho'});
 
 % a final test script shows that the generated fk functions work
-test_kinematics_function_generation_cxyz
+test_kinematics_function_generation_justfix_d
 
 %% put some necessary variables in param struct
 param.rho_opt_size = size(rho_opt,1);
 param.rho_fix_size = size(rho_fix,1);
-param.rho_opt_str = 'c_x, c_y, c_z';
+param.rho_opt_str = 'o_x, o_y, l_t, l_c';
 
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
@@ -179,20 +178,22 @@ param.lt = 0.2;
 param.lc = 0.2;
 
 param.rho_opt_true = zeros(param.rho_opt_size,4);
-param.rho_opt_true(:,1) = [0;0;0];
-param.rho_opt_true(:,2) = [0;0;0];
-param.rho_opt_true(:,3) = [0;0;0];
-param.rho_opt_true(:,4) = [0;0;0];
+param.rho_opt_true(:,1) = [param.ox(1);param.oy(1);param.lt;param.lc];
+param.rho_opt_true(:,2) = [param.ox(2);param.oy(2);param.lt;param.lc];
+param.rho_opt_true(:,3) = [param.ox(3);param.oy(3);param.lt;param.lc];
+param.rho_opt_true(:,4) = [param.ox(4);param.oy(4);param.lt;param.lc];
 
 param.rho_opt_init = zeros(param.rho_opt_size,4);
-param.rho_opt_init(:,1) = 0.1*randn(3,1);
-param.rho_opt_init(:,2) = 0.1*randn(3,1);
-param.rho_opt_init(:,3) = 0.1*randn(3,1);
-param.rho_opt_init(:,4) = 0.1*randn(3,1);
+param.rho_opt_init(:,1) = [param.ox(1);param.oy(1);param.lt;0.25];
+param.rho_opt_init(:,2) = [param.ox(2);param.oy(2);param.lt;0.21];
+param.rho_opt_init(:,3) = [param.ox(3);param.oy(3);param.lt;0.2];
+param.rho_opt_init(:,4) = [param.ox(4);param.oy(4);param.lt;0.2];
 
 param.rho_fix = zeros(param.rho_fix_size,4);
-param.rho_fix(:,1) = [param.ox(1);param.oy(1);param.d(1);param.lt; param.lc];
-param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt; param.lc];
-param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt; param.lc];
-param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt; param.lc];
+param.rho_fix(:,1) = [param.d(1)];
+param.rho_fix(:,2) = [param.d(2)];
+param.rho_fix(:,3) = [param.d(3)];
+param.rho_fix(:,4) = [param.d(4)];
 
+% adjust this if the robot has different number of legs 
+param.active_leg = [0,1,0,1];
