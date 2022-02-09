@@ -7,17 +7,18 @@
 addpath('unitree_A1/mr')
 
 %% modify this section is parameters to be estimated are different
-% % estimate lc
+% % estimate cx cy cz
 % parameters (align with paper)
 %     -    ox, the x direction offset from body center to leg base
 %     -    oy, the y direction offset from body center to leg base
 %     -     d, the offset from thigh motor to calf motor
 %     -    lt, the upper leg (thigh) length
-%     -    lc, the lower leg (calf) length   ( to be estimated)
+%     -    lc, the lower leg (calf) length   
 %     -    t1 t2 t3, the joint angles theta
 %     -    dt1 dt2 dt3, the joint angular velocity
+%     -    cx cy cz                                      (to be estimated)
 
-syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 real
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz real
 % determine estimation size and fix size
 theta = [t1;t2;t3];
 rho_opt = [lc];
@@ -92,6 +93,7 @@ d_fk_dt = simplify(jacobian(fk_pf_pos,theta))
 
 % derivative of forward kinematics position wrt rho_opt
 d_fk_drho = simplify(jacobian(fk_pf_pos,rho_opt))
+d_fk_ddrho = simplify(jacobian(d_fk_drho(:),rho_opt))
 
 % J = d_fk_dq is the Jacobian, now we need to further take its Jacobian wrt
 % theta
@@ -151,6 +153,10 @@ matlabFunction(d_fk_drho,...
     'file','autoFunc_d_fk_drho.m',...
     'vars',{theta, rho_opt,rho_fix},...
     'outputs',{'d_fk_drho'});
+matlabFunction(d_fk_ddrho,...
+    'file','autoFunc_d_fk_ddrho.m',...
+    'vars',{theta, rho_opt,rho_fix},...
+    'outputs',{'d_fk_ddrho'});
 matlabFunction(dJ_dt,...
     'file','autoFunc_dJ_dt.m',...
     'vars',{theta, rho_opt,rho_fix},...
@@ -161,33 +167,42 @@ matlabFunction(dJ_drho,...
     'outputs',{'dJ_drho'});
 
 % a final test script shows that the generated fk functions work
-test_kinematics_function_generation_lc
+% test_kinematics_function_generation_cxyz
+%% C++ code generation
+codegen autoFunc_fk_pf_pos  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_fk_pf_pos
+codegen autoFunc_d_fk_dt    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_dt
+codegen autoFunc_d_fk_drho  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_drho
+codegen autoFunc_d_fk_ddrho -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_ddrho
+codegen autoFunc_dJ_dt      -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_dt
+codegen autoFunc_dJ_drho    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_drho
+
 
 %% put some necessary variables in param struct
 param.rho_opt_size = size(rho_opt,1);
 param.rho_fix_size = size(rho_fix,1);
-param.rho_opt_str = 'l_c';
+param.rho_opt_str = '$l_c$';
 
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
 param.all_leg = [1,2,3,4];
-param.ox = [0.3,0.3,-0.3,-0.3];
-param.oy = [0.15,-0.15,0.15,-0.15];
-param.d = [0.08,-0.08,0.08,-0.08];
-param.lt = 0.2;
-param.lc = 0.2;
+param.ox = [0.1805,0.1805,-0.1805,-0.1805];
+param.oy = [0.047,-0.047,0.047,-0.047];
+param.d = [0.0838,-0.0838,0.0838,-0.0838];
+% param.d = [0.09,-0.09,0.09,-0.09];
+param.lt = 0.21;
+param.lc = 0.21;
 
 param.rho_opt_true = zeros(param.rho_opt_size,4);
-param.rho_opt_true(:,1) = param.lc;
-param.rho_opt_true(:,2) = param.lc;
-param.rho_opt_true(:,3) = param.lc;
-param.rho_opt_true(:,4) = param.lc;
+param.rho_opt_true(:,1) = [param.lc];
+param.rho_opt_true(:,2) = [param.lc];
+param.rho_opt_true(:,3) = [param.lc];
+param.rho_opt_true(:,4) = [param.lc];
 
 param.rho_opt_init = zeros(param.rho_opt_size,4);
-param.rho_opt_init(:,1) = 0.25;
-param.rho_opt_init(:,2) = 0.3;
-param.rho_opt_init(:,3) = 0.14;
-param.rho_opt_init(:,4) = 0.12;
+param.rho_opt_init(:,1) = [param.lc]+0.1*randn(1,1);
+param.rho_opt_init(:,2) = [param.lc]+0.1*randn(1,1);
+param.rho_opt_init(:,3) = [param.lc]+0.1*randn(1,1);
+param.rho_opt_init(:,4) = [param.lc]+0.1*randn(1,1);
 
 param.rho_fix = zeros(param.rho_fix_size,4);
 param.rho_fix(:,1) = [param.ox(1);param.oy(1);param.d(1);param.lt];
@@ -195,5 +210,3 @@ param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt];
 param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt];
 param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt];
 
-% adjust this if the robot has different number of legs 
-param.active_leg = [0,1,0,1];

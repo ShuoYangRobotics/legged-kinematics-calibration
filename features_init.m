@@ -1,4 +1,4 @@
-param.num_features = 200;
+param.num_features = 500;
 R = 3;    % radius of the sphere
 Xc = tgt_x;
 Yc = tgt_y;

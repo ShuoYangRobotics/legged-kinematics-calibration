@@ -3,17 +3,19 @@ param.total_mass = 16;
 param.g = 9.805;
 
 % used to visualize the robot body
-param.vis_bl = 0.62;
-param.vis_bw = 0.30;
+param.vis_bl = 0.6;
+param.vis_bw = 0.3;
 param.vis_bh = 0.08;
 
 param.vis_lw = 0.03;
 
 % number of legs, leg kinematics and fk jacobian generation 
-param.leg_l1 = 0.2;
-param.leg_l2 = 0.22;
+param.leg_l1 = 0.22;
+param.leg_l2 = 0.2;
 
 param.num_leg = 4;
+param.num_dof_per_leg = 3;
+param.num_dof = 12;
 
 
 % camera parameters

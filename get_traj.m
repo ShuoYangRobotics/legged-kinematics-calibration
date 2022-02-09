@@ -31,8 +31,8 @@ pos_end = pose_end(1:3);
 p_list = zeros(3, traj_len); p_list(:,1) = pos_init; p_list(:,traj_len) = pos_end;
 dp_list = zeros(3, traj_len);
 ddp_list = zeros(3, traj_len);
-for i=2:traj_len-1
-    [p,dp,ddp] = hermite_cubic_knot(traj_t(i), traj_t(1), pos_init, zeros(3,1), traj_t(end), pos_end, zeros(3,1));
+for i=2:traj_len
+    [p,dp,ddp] = hermite_cubic_knot(traj_t(i), traj_t(1), pos_init, zeros(3,1), traj_t(end), pos_end, (pos_end-pos_init)/traj_t(end));
     p_list(:,i) = p;
     dp_list(:,i) = dp;
     ddp_list(:,i) = ddp;

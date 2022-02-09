@@ -17,9 +17,9 @@ param.active_leg = [1,1,1,1];
 tgt_x = 1.8;
 tgt_y = 0;
 tgt_z = 0;
-tgt_yaw = 10*randn;
-tgt_pitch = 5*randn;
-tgt_roll = 5*randn;
+tgt_yaw = 0;
+tgt_pitch = 0;
+tgt_roll = 0;
 
 q = quaternion([tgt_yaw tgt_pitch tgt_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(q);
@@ -29,12 +29,12 @@ measurement = [zeros(3,1);zeros(3,1);angle_measure;zeros(3,1);zeros(3,1)];
 
 %% generate another stance
 % % generate new stance location 
-next_x = tgt_x + 0.07+0.03*(2*randn-1);
-next_y = tgt_y + 0.01+0.01*(2*randn-1);
-next_z = tgt_z + 0.01+0.02*(2*randn-1);
-next_yaw = tgt_yaw+3;
-next_pitch = tgt_pitch;
-next_roll = tgt_roll;
+next_x = 1.9;
+next_y = 0;
+next_z = 0;
+next_yaw = tgt_yaw+1e-5;
+next_pitch = tgt_pitch+1e-3;
+next_roll = tgt_roll+1e-3;
 
 next_q = quaternion([next_yaw next_pitch next_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(next_q);
@@ -87,8 +87,8 @@ features_init;
 
 %% generate trajectory between the two stance state, especially the measurements
 
-dt = 1/150;
-traj_steps = 40;
+dt = 1/200;
+traj_steps = 15;   % 0.075s
 T = dt*(traj_steps-1);
 traj_t = 0:dt:T;
 
@@ -128,10 +128,11 @@ set(gca,'CameraPosition',[com_pos(1)+5 com_pos(2)+5 com_pos(3)+2]);
 set(gca,'CameraTarget',[com_pos(1) com_pos(2) com_pos(3)]);
 set(gca,'CameraUpVector',[0 0 1]);
 set(gca,'CameraViewAngle',8.6765);
-set(gca, 'XLim', [com_pos(1)-3.2 com_pos(1)+3.6])
-set(gca, 'YLim', [com_pos(2)-3.2 com_pos(2)+3.2])
-set(gca, 'ZLim', [com_pos(3)-2.1 com_pos(3)+2.1])
+% set(gca, 'XLim', [com_pos(1)-3.2 com_pos(1)+3.6])
+% set(gca, 'YLim', [com_pos(2)-3.2 com_pos(2)+3.2])
+% set(gca, 'ZLim', [com_pos(3)-2.1 com_pos(3)+2.1])
 drawnow;
+axis equal
 
 
 fig_id = 2;
@@ -148,4 +149,43 @@ subplot(3,1,3)
 plot(traj_t, meas_list(1,:));hold on;
 plot(traj_t, meas_list(2,:));hold on;
 plot(traj_t, meas_list(3,:));hold on;
+
+%% calculate velocity at mid step
+state = gt_state_list(:,floor(traj_steps/2));
+meas =  meas_list(:,floor(traj_steps/2));
+body_p = state(1:3);
+body_q = quaternion(state(4:7)');
+R_er = quat2rotm(body_q);
+body_v = state(8:10);
+
+joint_angle_list = meas(7:18);
+joint_av_list = meas(19:30);
+omega = meas(4:6);
+
+% true calf length
+r = zeros(3*param.num_leg,1);
+for i = 1:param.num_leg
+    angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
+    av = joint_av_list((i-1)*3+1:(i-1)*3+3);
+    % get opt rho TODO: check dimension here
+    rho_opt = state(10+(i-1)*param.rho_opt_size+1:10+i*param.rho_opt_size,1);
+    p_rf = autoFunc_fk_pf_pos(angle,rho_opt,param.rho_fix(:,i));
+    J_rf = autoFunc_d_fk_dt(angle,rho_opt,param.rho_fix(:,i));
+    % it seems velocity on y direction cannot be very correctly infered 
+    leg_v = (-J_rf*av-skew(omega)*p_rf)
+    r((i-1)*3+1:(i-1)*3+3) = body_v - R_er*leg_v
+end
+% wrong calf length
+r = zeros(3*param.num_leg,1);
+for i = 1:param.num_leg
+    angle = joint_angle_list((i-1)*3+1:(i-1)*3+3);
+    av = joint_av_list((i-1)*3+1:(i-1)*3+3);
+    % get opt rho TODO: check dimension here
+    rho_opt = state(10+(i-1)*param.rho_opt_size+1:10+i*param.rho_opt_size,1) - 0.01;
+    p_rf = autoFunc_fk_pf_pos(angle,rho_opt,param.rho_fix(:,i));
+    J_rf = autoFunc_d_fk_dt(angle,rho_opt,param.rho_fix(:,i));
+    % it seems velocity on y direction cannot be very correctly infered 
+    leg_v = (-J_rf*av-skew(omega)*p_rf)
+    r((i-1)*3+1:(i-1)*3+3) = body_v - R_er*leg_v
+end
 

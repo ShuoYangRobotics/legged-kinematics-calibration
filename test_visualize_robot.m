@@ -11,16 +11,16 @@ param.active_leg = [1,1,1,1];
 tgt_x = 1.8;
 tgt_y = 0;
 tgt_z = 0;
-tgt_yaw = 10*randn;
-tgt_pitch = 5*randn;
-tgt_roll = 5*randn;
+tgt_yaw = 0;
+tgt_pitch = 0;
+tgt_roll = 0;
 
 q = quaternion([tgt_yaw tgt_pitch tgt_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(q);
 state_init = [tgt_x;tgt_y;tgt_z;w;x;y;z;zeros(3,1);zeros(3,1);zeros(3,1)];
-angle_measure = 0.3*randn(3*sum(param.active_leg),1);
+angle_measure = repmat([0.0, 1.2, -1.8],1,param.num_leg);
 
-measurement = [zeros(3,1);zeros(3,1);angle_measure;zeros(3,1);zeros(3,1)];
+measurement = [angle_measure'];
 
 fig_id = 1;
 fig = figure(fig_id);

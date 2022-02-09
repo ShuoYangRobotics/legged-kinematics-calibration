@@ -93,6 +93,7 @@ d_fk_dt = simplify(jacobian(fk_pf_pos,theta))
 
 % derivative of forward kinematics position wrt rho_opt
 d_fk_drho = simplify(jacobian(fk_pf_pos,rho_opt))
+d_fk_ddrho = simplify(jacobian(d_fk_drho(:),rho_opt))
 
 % J = d_fk_dq is the Jacobian, now we need to further take its Jacobian wrt
 % theta
@@ -152,6 +153,10 @@ matlabFunction(d_fk_drho,...
     'file','autoFunc_d_fk_drho.m',...
     'vars',{theta, rho_opt,rho_fix},...
     'outputs',{'d_fk_drho'});
+matlabFunction(d_fk_ddrho,...
+    'file','autoFunc_d_fk_ddrho.m',...
+    'vars',{theta, rho_opt,rho_fix},...
+    'outputs',{'d_fk_ddrho'});
 matlabFunction(dJ_dt,...
     'file','autoFunc_dJ_dt.m',...
     'vars',{theta, rho_opt,rho_fix},...
@@ -172,11 +177,12 @@ param.rho_opt_str = 'c_x, c_y, c_z';
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
 param.all_leg = [1,2,3,4];
-param.ox = [0.3,0.3,-0.3,-0.3];
-param.oy = [0.15,-0.15,0.15,-0.15];
-param.d = [0.08,-0.08,0.08,-0.08];
-param.lt = 0.2;
-param.lc = 0.2;
+param.ox = [0.1805,0.1805,-0.1805,-0.1805];
+param.oy = [0.047,-0.047,0.047,-0.047];
+% param.d = [0.0838,-0.0838,0.0838,-0.0838];
+param.d = [0.09,-0.09,0.09,-0.09];
+param.lt = 0.21;
+param.lc = 0.20;
 
 param.rho_opt_true = zeros(param.rho_opt_size,4);
 param.rho_opt_true(:,1) = [0;0;0];

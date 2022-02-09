@@ -22,7 +22,7 @@ function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
     end
 
     % draw body
-    draw_cube(fig, p_er, R_er,param.vis_bl,param.vis_bw,param.vis_bh,color_factor*[1 0 1])
+    draw_cube(fig, p_er, R_er,param.vis_bl,param.vis_bw,param.vis_bh,color_factor*[0.2 0.2 0.2])
 
     % draw legs
     for i=1:param.num_leg 
@@ -33,7 +33,7 @@ function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
             R_rhip = autoFunc_fk_hip_rot(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
             p_ehip = R_er*p_rhip + p_er;
             R_ehip = R_er*R_rhip;
-            draw_cube(fig, p_ehip, R_ehip, 0.05,0.16,0.05,color_factor*[0.2 0.6 1])
+%             draw_cube(fig, p_ehip, R_ehip, 0.05,0.14,0.05,color_factor*[0.2 0.6 1])
 
             % draw thigh
             p_rthigh = autoFunc_fk_thigh_pos(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
@@ -46,7 +46,7 @@ function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
             R_rcalf = autoFunc_fk_calf_rot(theta,param.rho_opt_true(:,i),param.rho_fix(:,i));
             p_ecalf = R_er*p_rcalf + p_er;
             R_ecalf = R_er*R_rcalf;
-            draw_cube(fig, p_ecalf, R_ecalf, 0.03,0.03,param.lt,color_factor*[0.5 0.5 0.8])
+            draw_cube(fig, p_ecalf, R_ecalf, 0.03,0.03,param.lc,color_factor*[0.5 0.5 0.8])
         end
     end
 
@@ -70,8 +70,8 @@ function[]= draw_robot(fig, pose, joint_angles, param, color_factor)
     p_llc = R_er*(param.R_rc*p_ll +param.p_rc)+p_er; % p_ll in world frame
     p_ruc = R_er*(param.R_rc*p_ru +param.p_rc)+p_er; % p_ru in world frame
     p_rlc = R_er*(param.R_rc*p_rl +param.p_rc)+p_er; % p_rl in world frame
-    plot3([p_wc(1) p_luc(1)],[p_wc(2) p_luc(2)],[p_wc(3) p_luc(3)],'Color',[0 0 0],'LineWidth',3);
-    plot3([p_wc(1) p_ruc(1)],[p_wc(2) p_ruc(2)],[p_wc(3) p_ruc(3)],'Color',[0 0 0],'LineWidth',3);
-    plot3([p_wc(1) p_llc(1)],[p_wc(2) p_llc(2)],[p_wc(3) p_llc(3)],'Color',[0 0 0],'LineWidth',3);
-    plot3([p_wc(1) p_rlc(1)],[p_wc(2) p_rlc(2)],[p_wc(3) p_rlc(3)],'Color',[0 0 0],'LineWidth',3);
+    plot3([p_wc(1) p_luc(1)],[p_wc(2) p_luc(2)],[p_wc(3) p_luc(3)],'Color',color_factor*[0.2 0.2 0.2],'LineWidth',3);
+    plot3([p_wc(1) p_ruc(1)],[p_wc(2) p_ruc(2)],[p_wc(3) p_ruc(3)],'Color',color_factor*[0.2 0.2 0.2],'LineWidth',3);
+    plot3([p_wc(1) p_llc(1)],[p_wc(2) p_llc(2)],[p_wc(3) p_llc(3)],'Color',color_factor*[0.2 0.2 0.2],'LineWidth',3);
+    plot3([p_wc(1) p_rlc(1)],[p_wc(2) p_rlc(2)],[p_wc(3) p_rlc(3)],'Color',color_factor*[0.2 0.2 0.2],'LineWidth',3);
 end

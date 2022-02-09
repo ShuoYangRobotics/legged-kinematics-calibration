@@ -13,7 +13,8 @@ est_state_list(:,1) = state_init;
 %   est_state_list(10+j,1) = est_state_list(10+j,1) + 0.05*randn;
 % %   est_state_list(16+j,1) = est_state_list(16+j,1);
 % end
-est_state_list(11:14,1) = [0.25;0.3;0.14;0.12];
+% random initial rho_opt
+est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:)+ 0.05*randn(param.rho_opt_size*4,1);
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance

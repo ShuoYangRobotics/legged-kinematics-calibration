@@ -14,26 +14,26 @@ est_state_list(:,1) = state_init;
 % %   est_state_list(16+j,1) = est_state_list(16+j,1);
 % end
 % random initial rho_opt
-est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:)+ 0.05*randn(param.rho_opt_size*4,1);
+est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:);
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance
-P = 0.00001*eye(param.state_size-1);
+P = 0.1*eye(param.state_size-1);
 % P(7:9,7:9) = 0.0001*eye(3);
 P(9+1:9+param.rho_opt_size*4,9+1:9+param.rho_opt_size*4) = 0.15*eye(param.rho_opt_size*4);
 
 % constant parameters 
 % process noise  angle, velocity, rho
-Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.0001*ones(param.rho_opt_size*4,1)]);
+Q = diag([0.000001*ones(3,1);0.000001*ones(3,1);0.000001*ones(param.rho_opt_size*4,1)]);
 
 % measurement noise
-R = 0.001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
+R = 0.0000001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
 R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0000001*eye(3*max(size(fix_foot_id_list)));
 
 W = zeros(param.state_size-1, param.state_size-1);
-for i=2:traj_len-1
+for i=2:traj_len
     % integrate state
-    est_state_list(:,i) = ekf_process(est_state_list(:,i-1), meas_list(:,i), dt, param);
+    est_state_list(:,i) = ekf_process(est_state_list(:,i-1), meas_list(:,i-1), dt, param);
     F = ekf_process_jac(est_state_list(:,i-1), meas_list(:,i), dt, param);
     
     % map process noise to dx
@@ -60,16 +60,17 @@ for i=2:traj_len-1
     leg_r_noise = ekf_leg_noise_jac(est_state_list(:,i), meas_list(:,i), dt, param);
     R(2*num_visual_features+1:end,2*num_visual_features+1:end) = R(2*num_visual_features+1:end,2*num_visual_features+1:end) +  leg_r_noise;
     
-    K = P*H'*inv(H*P*H'+R);
+    K = P*H'/(H*P*H'+R);
 
     delta_x = K*(0-r);
     P = (eye(param.state_size-1) - K*H)*P;
     est_state_list(:,i) = ekf_state_update(est_state_list(:,i), delta_x);
     % for linear invariant system this is correct
-    O=[H;H*F;H*F^2;H*F^3;H*F^4];
-    rank(O)
+%     O=[H;H*F;H*F^2;H*F^3;H*F^4];
+%     rank(O)
     % for linear variant system we need observablity gramian
     W = W + (F')^(i-2)*H'*H*(F)^(i-2);
+    size(W)
     rank(W)
     
 end
