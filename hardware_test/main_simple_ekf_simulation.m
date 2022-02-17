@@ -22,7 +22,7 @@
 % first add functions in the parent folder
 % we especially needs all the kinematicd functions 
 addpath('..')
-addpath('../unitree_A1/mr')
+addpath('../mr')
 
 % run kinematics function generation
 % can comment the following two scripts after running them once
@@ -40,12 +40,12 @@ LO_vel_data = zeros(param.num_dof,1);
 warning('off')
 
 % no bias first
-rho_bias_data = zeros(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = zeros(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 
 %%
@@ -133,12 +133,12 @@ param.simple_ekf_process_force_ratio = 0;
 [est_state_list,est_state_time] = simple_ekf_estimation(foot_force.Time, state_init, ...
     gyro_IMU, pos_mocap, orient_mocap, vel_mocap, joint_ang, joint_vel, foot_force, param);
 
-rho_bias_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
-rho_bias = timeseries(rho_bias_data,est_state_time,'Name',"rho_bias");
+rho_param_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
+rho_param = timeseries(rho_param_data,est_state_time,'Name',"rho_param");
 
 %% plot state
 figure(2);clf
-plot(rho_bias.Time,rho_bias.Data(:,1:param.num_leg*param.rho_opt_size)); hold on;
+plot(rho_param.Time,rho_param.Data(:,1:param.num_leg*param.rho_opt_size)); hold on;
 xlim([6.5 14.5]);
 ylim([-0.15 0.05]);
 for i=1:size(start_time,1)
@@ -148,11 +148,11 @@ a.FaceColor = [0.2 0.6 0.5];
 end
 % plot(foot_force.Time, est_state_list(1+param.rho_opt_size*param.num_leg,:)); hold on;
 
-%% plot on figure 1 of velocity with bias
+%% plot on figure 1 of velocity with param
 
 
 lo_v_ts2 = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 figure(1)
 for i=1:1
@@ -168,6 +168,6 @@ for i=1:1
 %     plot(lo_v_ts.Time, movmean(lo_v_ts.Data(:,3+3*(i-1)),15,1));hold on;
 end
 subplot(2,1,1);
-legend([p1 p2,p4],{'ground truth', 'leg odometry velocity from leg 1','leg odometry velocity from leg 1 with bias correction'})
+legend([p1 p2,p4],{'ground truth', 'leg odometry velocity from leg 1','leg odometry velocity from leg 1 with param correction'})
 subplot(2,1,2);
 legend([p3],{'contact force sensor reading from leg 1'})

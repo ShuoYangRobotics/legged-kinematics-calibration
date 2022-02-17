@@ -2,12 +2,12 @@
 warning('off')
 
 % no bias first
-rho_bias_data = param.lc*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = param.lc*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 % 1.2 draw lo velocity
 figure(1);clf

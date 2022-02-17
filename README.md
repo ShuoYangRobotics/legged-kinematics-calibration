@@ -1,22 +1,37 @@
-EKF_kinematics_calibration
+The 'paper' branch of this repo contains code accompanying the following paper:
 
-1. Kinemaitcs
-First, run kinematics_init.m, get kinematics of legs
-Then,  run param_init.m,  initialize necessary variables
+"Online Kinematic Calibration for Legged Robots",
 
-2. Robot visualization
-Then run test_visualize_robot.m, visualize the robot pos
+by Shuo Yang. We proposed a method to let legged robots do online calibration of certain kinematic parameters such as leg length that are hard to measure due to foot deformation. The repo provide a MATLAB simulation to conduct observablity analysis and a script for calibrating parameters using sensor data collected on robot hardware. 
 
-3. Land features
-Run test_visualize_robot_and_land_features.m, visualize robot and a bunch of scene features
+## EKF using Simulation Data
+The following script contains a working example 
+```matlab
+test_ekf.m
+```
+It simulates the body displacement of the robot in one gait cycle. An EKF estimates robot pose (position and orientation) as well as unknown kinematics parameters. 
 
-4. Generate trajectories
-This script first generate a stance posture of the robot, then another slightly shifted posture is genereated.
-Then we genereate a moving trajectory from the first posture to the second. We save states in a state trajectory "state_list"
-Also, the function "get_traj" also genereates simulated measurements along this state trajectory, which saves in "meas_list"
-Run test_robot_trajector_generation.m to see a visualization of the robot trajectory
 
-5. test EKF
-test_ekf.m 
+## EKF using Hardware Data
+We record datasets on a Unitree A1 robot contains proproceptive sensor data, mocap system data and camera images. 
 
-This script tests function "ekf_estimation". An error state EKF. 
+The name of every rosbag indicates the motion pattern of the robot is executing in that rosbag. 
+
+Scripts in folder "hardware_test" runs EKF on these rosbags to estimate the calf link length.
+
+To run the EKF, first load the rosbag. Modify the **bagselect** filepath in 
+```matlab
+rosbag_process.m
+```
+So that the correct bag can be loaded. The script also performs some elementary signal processing filters on sensor data.
+
+Then, run the following script
+```matlab
+test_ekf_hardware.m
+```
+
+The estimated calf length will be plotted in a few seconds. The length changes between 0.19-0.21m during walking. 
+
+
+Comparing to simulation, the hardware estimation is more noisy. This is due to sensor noise and inaccuracy in foot contact detection. Also, as we analysed in the paper, when the joint velocities and body angular velocities are close to zero, kinematic parameters become unobservable. So the estimation will slowly drift when the robot stands still (around 3-6s in datasets).
+

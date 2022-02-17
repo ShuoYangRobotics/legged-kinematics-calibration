@@ -2,18 +2,16 @@
 run ../kinematics_init_lc
 run ../param_init
 
-bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-29-58.bag');
-% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-32-42.bag');
+% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-29-58.bag');
 
-% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-44-11.bag');
+bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-47-38.bag');
 
-% bagselect = rosbag('/home/shuoy/rosbag/home_test/2022-01-05-12-08-57.bag');
-% bagselect = rosbag('/home/shuoy/rosbag/1217_aaron_lab/1217_circle.bag');
+
 start_time =bagselect.StartTime;
 duration = 20;
 
 %% select IMU data 
-bSel2 = select(bagselect,"Time",[start_time start_time + duration+0.1],'Topic','/hardware_a1/imu');
+bSel2 = select(bagselect,"Time",[start_time start_time + duration+0.2],'Topic','/hardware_a1/imu');
 accel_IMU = timeseries(bSel2,"LinearAcceleration.X","LinearAcceleration.Y","LinearAcceleration.Z");
 accel_IMU.Time = accel_IMU.Time-accel_IMU.Time(1);
 accel_IMU.Data = movmean(accel_IMU.Data,40,1);

@@ -2,23 +2,23 @@
 warning('off')
 
 % use default param.lc (should be 0.21)
-rho_bias_data = 0.21*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = 0.21*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 % 1.2 calculate lo velocity for lc = 0.3
 warning('off')
 
 % use default lc = 0.3
-rho_bias_data2 = 0.3*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias2 = timeseries(rho_bias_data2,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data2 = 0.3*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param2 = timeseries(rho_param_data2,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts2 = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias2, param);
+    vel_mocap, joint_ang, joint_vel,rho_param2, param);
 
 %% 1.2 draw 2 lo velocity,compare with ground truth
 figure(2);clf

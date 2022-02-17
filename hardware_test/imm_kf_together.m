@@ -4,12 +4,12 @@
 warning('off')
 
 % no bias first
-rho_bias_data = param.lc_init*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = param.lc_init*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 % 1.2 draw lo velocity
 figure(1);clf
@@ -289,9 +289,9 @@ for t_idx = 2:size(joint_vel.Time,1)
 end
 
 %% get result 
-rho_bias_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
-rho_bias_data = movmean(rho_bias_data,35,1);
-rho_bias = timeseries(rho_bias_data,est_state_time,'Name',"rho_bias");
+rho_param_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
+rho_param_data = movmean(rho_param_data,35,1);
+rho_param = timeseries(rho_param_data,est_state_time,'Name',"rho_param");
 
 % 1.5 get contact flag from foot_force just for leg one 
 contact = 300*contact_estimation(:,1);
@@ -303,9 +303,9 @@ start_time = times(dtmp>50);
 end_time = times(dtmp<-50);
 
 
-% 1.4 draw bias
+% 1.4 draw param
 p3 = subplot(2,1,2);
-plot(rho_bias.Time,rho_bias.Data(:,1:param.rho_opt_size)); hold on;
+plot(rho_param.Time,rho_param.Data(:,1:param.rho_opt_size)); hold on;
 xlim([0 19]);
 ylim([0 0.35]);
 for i=1:min(size(start_time,1),size(end_time,1))
@@ -314,7 +314,7 @@ a.FaceAlpha = 0.2;
 a.FaceColor = [0.2 0.6 0.5];
 end
 xlabel('Time (s)')
-ylabel('bias (m)')
+ylabel('param (m)')
 title(['Estimated calf length. Initial calf length: ' num2str(param.lc_init)])
 
 
@@ -330,9 +330,9 @@ a.FaceColor = [0.2 0.6 0.5];
 end
 
 
-% 1.6 plot on figure 1 of velocity with bias
+% 1.6 plot on figure 1 of velocity with param
 lo_v_ts2 = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 figure(1)
 for i=1:1
@@ -345,4 +345,4 @@ legend([p1 p2,p4],{'ground truth', 'leg odometry velocity from leg 1 without cal
     'leg odometry velocity from leg 1 with calibration'})
 
 subplot(2,1,2);
-legend([p3],{'estimated bias from leg 1'})
+legend([p3],{'estimated param from leg 1'})

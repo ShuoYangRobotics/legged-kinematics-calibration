@@ -7,7 +7,7 @@
 % first add functions in the parent folder
 % we especially needs all the kinematicd functions 
 addpath('..')
-addpath('../unitree_A1/mr')
+addpath('../mr')
 
 % run kinematics function generation
 % can comment the following two scripts after running them once
@@ -20,28 +20,28 @@ param.lc_init = 0.18;
 
 imm_kf_together;
 
-rho_bias1 = rho_bias;
+rho_param1 = rho_param;
 
 %% 2. lc = 0.25
 param.lc_init = 0.25;
 
 imm_kf_together;
 
-rho_bias2 = rho_bias;
+rho_param2 = rho_param;
 
 %% 3. lc = 0.30
 param.lc_init = 0.30;
 
 imm_kf_together;
 
-rho_bias3 = rho_bias;
+rho_param3 = rho_param;
 
 %% put all cases together
 figure(4); clf
 % subplot(4,1,1)
-% plot(rho_bias1.Time, rho_bias1.Data(:,1),'LineWidth',3); hold on;
-% plot(rho_bias2.Time, rho_bias2.Data(:,1),'LineWidth',3);
-% plot(rho_bias3.Time, rho_bias3.Data(:,1),'LineWidth',3);
+% plot(rho_param1.Time, rho_param1.Data(:,1),'LineWidth',3); hold on;
+% plot(rho_param2.Time, rho_param2.Data(:,1),'LineWidth',3);
+% plot(rho_param3.Time, rho_param3.Data(:,1),'LineWidth',3);
 % xlabel('Time (s)')
 % ylabel('calf length (m)')
 % title('Estimated calf length with different initial values')
@@ -50,13 +50,13 @@ figure(4); clf
 %     'Leg 1 length, initial lc = 0.30');
 % subplot(4,1,2)
 
-rho_bias1 = resample(rho_bias1,0:0.03:6);
-rho_bias2 = resample(rho_bias2,0:0.03:6);
-rho_bias3 = resample(rho_bias3,0:0.03:6);
-p1 = plot(rho_bias1.Time, rho_bias1.Data(:,2),'LineWidth',3); hold on;
-p2 = plot(rho_bias2.Time, rho_bias2.Data(:,2),'LineWidth',3);
-p3 = plot(rho_bias3.Time, rho_bias3.Data(:,2),'LineWidth',3);
-plot(rho_bias1.Time, 0.21*ones(size(rho_bias1.Time))','.-'); hold on;
+rho_param1 = resample(rho_param1,0:0.03:6);
+rho_param2 = resample(rho_param2,0:0.03:6);
+rho_param3 = resample(rho_param3,0:0.03:6);
+p1 = plot(rho_param1.Time, rho_param1.Data(:,2),'LineWidth',3); hold on;
+p2 = plot(rho_param2.Time, rho_param2.Data(:,2),'LineWidth',3);
+p3 = plot(rho_param3.Time, rho_param3.Data(:,2),'LineWidth',3);
+plot(rho_param1.Time, 0.21*ones(size(rho_param1.Time))','.-'); hold on;
 xlabel('Time (s)')
 ylabel('Calf length (m)')
 title('Different calibration runs with different initial values')
@@ -64,9 +64,9 @@ legend([p1,p2,p3],{'Leg 2 calf length, initial value = 0.18m',...
     'Leg 2 calf length, initial value = 0.25m',...
     'Leg 2 calf length, initial value = 0.30m'});
 % subplot(4,1,3)
-% plot(rho_bias1.Time, rho_bias1.Data(:,3),'LineWidth',3); hold on;
-% plot(rho_bias2.Time, rho_bias2.Data(:,3),'LineWidth',3);
-% plot(rho_bias3.Time, rho_bias3.Data(:,3),'LineWidth',3);
+% plot(rho_param1.Time, rho_param1.Data(:,3),'LineWidth',3); hold on;
+% plot(rho_param2.Time, rho_param2.Data(:,3),'LineWidth',3);
+% plot(rho_param3.Time, rho_param3.Data(:,3),'LineWidth',3);
 % xlabel('Time (s)')
 % ylabel('calf length (m)')
 % title('Estimated calf length with different initial values')
@@ -74,9 +74,9 @@ legend([p1,p2,p3],{'Leg 2 calf length, initial value = 0.18m',...
 %     'Leg 3 length, initial lc = 0.25',...
 %     'Leg 3 length, initial lc = 0.30');
 % subplot(4,1,4)
-% plot(rho_bias1.Time, rho_bias1.Data(:,4),'LineWidth',3); hold on;
-% plot(rho_bias2.Time, rho_bias2.Data(:,4),'LineWidth',3);
-% plot(rho_bias3.Time, rho_bias3.Data(:,4),'LineWidth',3);
+% plot(rho_param1.Time, rho_param1.Data(:,4),'LineWidth',3); hold on;
+% plot(rho_param2.Time, rho_param2.Data(:,4),'LineWidth',3);
+% plot(rho_param3.Time, rho_param3.Data(:,4),'LineWidth',3);
 % xlabel('Time (s)')
 % ylabel('calf length (m)')
 % title('Estimated calf length with different initial values')

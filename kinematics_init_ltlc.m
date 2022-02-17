@@ -4,7 +4,7 @@
 % the matlab functions then outputs to C++ functions
 
 % first add modern robotics tool box
-addpath('unitree_A1/mr')
+addpath('mr')
 
 %% modify this section is parameters to be estimated are different
 % % estimate cx cy cz
@@ -172,6 +172,8 @@ param.rho_opt_str = '$l_t$; $l_c$';
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
 param.all_leg = [1,2,3,4];
+% assume all legs are active 
+param.active_leg = [1,1,1,1];
 param.ox = [0.3,0.3,-0.3,-0.3];
 param.oy = [0.15,-0.15,0.15,-0.15];
 param.d = [0.08,-0.08,0.08,-0.08];
