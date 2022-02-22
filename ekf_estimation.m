@@ -70,6 +70,7 @@ for i=2:traj_len
 %     rank(O)
     % for linear variant system we need observablity gramian
     W = W + (F')^(i-2)*H'*H*(F)^(i-2);
+    size(H)
     size(W)
     rank(W)
     

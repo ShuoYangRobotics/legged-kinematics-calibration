@@ -1,10 +1,10 @@
 %% init necessary parameters
 % init kinematics parameter
-% kinematics_init_lc;
+kinematics_init_ltlc;
 % kinematics_init_lt_cx
 % init parameter
 % kinematics_init_justfix_d
-kinematics_init_ltlcoxoy;
+% kinematics_init_ltlcoxoy;
 param_init;
 % % assume all legs are active 
 % param.active_leg = [1,1,1,1];

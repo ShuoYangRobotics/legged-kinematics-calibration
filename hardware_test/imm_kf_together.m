@@ -30,7 +30,7 @@ end
 
 % 1.3 run ekf to estimate fk parameters
 traj_len = length(joint_vel.Data)
-state_init = [param.lc_init*ones(param.rho_opt_size*param.num_leg,1);
+state_init = [randn(param.rho_opt_size*param.num_leg,1);
                   zeros(param.rho_opt_size*param.num_leg,1)];
 
 param.simple_ekf_process_position_ratio = 5;
@@ -263,10 +263,10 @@ for t_idx = 2:size(joint_vel.Time,1)
     end
     for j = 1:param.num_leg
         contacts(j) = contact_estimation(t_idx,j) > 0.9;
-        r_weight = 4000*(1-contacts(j)) + 100*var_forces(j)+ 0.0001;
+        r_weight = 4000*(1-contacts(j)) + 0.5*var_forces(j)+ 0.00001;
         rho_R((j-1)*3+1,(j-1)*3+1) = r_weight;
         rho_R((j-1)*3+2,(j-1)*3+2) = r_weight;
-        rho_R((j-1)*3+3,(j-1)*3+3) = r_weight*10;
+        rho_R((j-1)*3+3,(j-1)*3+3) = r_weight;
         rho_Q((j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg,...
           (j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg) = contacts(j)+0.0001;
         
@@ -292,6 +292,8 @@ end
 rho_param_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
 rho_param_data = movmean(rho_param_data,35,1);
 rho_param = timeseries(rho_param_data,est_state_time,'Name',"rho_param");
+
+contact_flags = timeseries(contact_estimation,est_state_time,'Name',"contact_flags");
 
 % 1.5 get contact flag from foot_force just for leg one 
 contact = 300*contact_estimation(:,1);

@@ -3,12 +3,13 @@ run ../kinematics_init_lc
 run ../param_init
 
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-29-58.bag');
+bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-42-35.bag');
 
-bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-47-38.bag');
+% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-47-38.bag');
 
 
 start_time =bagselect.StartTime;
-duration = 20;
+duration = 36;
 
 %% select IMU data 
 bSel2 = select(bagselect,"Time",[start_time start_time + duration+0.2],'Topic','/hardware_a1/imu');
@@ -28,8 +29,10 @@ orient_mocap.Time = orient_mocap.Time-orient_mocap.Time(1);
 
 pos_mocap = timeseries(bSel,"Pose.Position.X","Pose.Position.Y","Pose.Position.Z");
 pos_mocap.Time = pos_mocap.Time-pos_mocap.Time(1);
+pos_mocap.Data = pos_mocap.Data-pos_mocap.Data(1,:);
 dt_list = [0.001;pos_mocap.Time(2:end)-pos_mocap.Time(1:end-1)];
 
+%%
 [b,g] = sgolay(5,25);
 dt = 0.0028;
 dx = zeros(length(pos_mocap.Data),3);
