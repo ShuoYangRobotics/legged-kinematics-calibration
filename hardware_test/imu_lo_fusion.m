@@ -11,13 +11,12 @@ est_state_time = zeros(1,traj_len);
 % estimation covariance
 P = 0.1*eye(est_state_size);
 % process noise covariance
-Q = diag([0.01*ones(3,1);
-          1*ones(3,1)]);
+Q = diag([0.1*ones(3,1);
+          2*ones(3,1)]);
 % measurement noise covariance
-R = diag(0.001*ones(3,1));
+R = diag(0.1*ones(3,1));
 % save initial state
 est_state_list(:,1) = state_init;
-
 
 % for each time step 
 for t_idx = 2:size(lo_v_ts.Time,1)
@@ -45,11 +44,11 @@ for t_idx = 2:size(lo_v_ts.Time,1)
     
     vm = zeros(3,1);
     if (sum_contacts == 0)
-        vm = zeros(3,1);
-        R = diag(999*ones(3,1));
+        vm = est_state_list(4:6,t_idx);
+        R = diag(9999*ones(3,1));
     else
         vm = lo_vs*contacts/sum_contacts;
-        R = diag(0.001*ones(3,1));
+        R = diag(0.1*ones(3,1));
     end
     
     % measurement model 
@@ -59,10 +58,13 @@ for t_idx = 2:size(lo_v_ts.Time,1)
     
     
     S = H*P*H' + R;
-    
-    K = P*H'*inv(S);
-    est_state_list(:,t_idx) = est_state_list(:,t_idx)  + K*y;
-    P = (eye(6)-K*H)*P;
+    if (y'*S*y < 100)
+        K = P*H'*inv(S);
+        est_state_list(:,t_idx) = est_state_list(:,t_idx)  + K*y;
+        P = (eye(6)-K*H)*P;
+    else
+        est_state_list(:,t_idx) = est_state_list(:,t_idx);
+    end
     est_state_time(:,t_idx) = t;
 end
 pos_ts = timeseries(est_state_list(1:3,:),est_state_time,'Name',"pos_ts");

@@ -18,7 +18,7 @@ addpath('mr')
 %     -    dt1 dt2 dt3, the joint angular velocity
 %     -    cx cy cz                                      (to be estimated)
 
-syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz real
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
 % determine estimation size and fix size
 theta = [t1;t2;t3];
 rho_opt = [lt;lc;ox;oy];
@@ -198,3 +198,10 @@ param.rho_fix(:,2) = [param.d(2)];
 param.rho_fix(:,3) = [param.d(3)];
 param.rho_fix(:,4) = [param.d(4)];
 
+
+% 
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
+av = [dt1;dt2;dt3];
+omega = [wx;wy;wz];
+D = kron(av',eye(3))*dJ_drho+skew(omega)*d_fk_drho
+rank(D)

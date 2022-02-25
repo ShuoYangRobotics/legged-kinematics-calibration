@@ -4,12 +4,15 @@ run ../param_init
 
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-29-58.bag');
 bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-42-35.bag');
+% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-32-42.bag');
+
+% bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-44-11.bag');
 
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-47-38.bag');
 
 
 start_time =bagselect.StartTime;
-duration = 36;
+duration = 35;
 
 %% select IMU data 
 bSel2 = select(bagselect,"Time",[start_time start_time + duration+0.2],'Topic','/hardware_a1/imu');

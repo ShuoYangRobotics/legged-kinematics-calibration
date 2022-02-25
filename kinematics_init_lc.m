@@ -212,3 +212,9 @@ param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt];
 param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt];
 param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt];
 
+% 
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
+av = [dt1;dt2;dt3];
+omega = [wx;wy;wz];
+D = kron(av',eye(3))*dJ_drho+skew(omega)*d_fk_drho
+rank(D)
