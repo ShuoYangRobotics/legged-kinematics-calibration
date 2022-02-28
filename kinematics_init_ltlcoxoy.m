@@ -4,7 +4,7 @@
 % the matlab functions then outputs to C++ functions
 
 % first add modern robotics tool box
-addpath('unitree_A1/mr')
+addpath('mr')
 
 %% modify this section is parameters to be estimated are different
 % % estimate cx cy cz
@@ -18,7 +18,7 @@ addpath('unitree_A1/mr')
 %     -    dt1 dt2 dt3, the joint angular velocity
 %     -    cx cy cz                                      (to be estimated)
 
-syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz real
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
 % determine estimation size and fix size
 theta = [t1;t2;t3];
 rho_opt = [lt;lc;ox;oy];
@@ -172,6 +172,8 @@ param.rho_opt_str = '$l_t$; $l_c$; $o_x$; $o_y$';
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
 param.all_leg = [1,2,3,4];
+% assume all legs are active 
+param.active_leg = [1,1,1,1];
 param.ox = [0.3,0.3,-0.3,-0.3];
 param.oy = [0.15,-0.15,0.15,-0.15];
 param.d = [0.08,-0.08,0.08,-0.08];
@@ -196,3 +198,10 @@ param.rho_fix(:,2) = [param.d(2)];
 param.rho_fix(:,3) = [param.d(3)];
 param.rho_fix(:,4) = [param.d(4)];
 
+
+% 
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
+av = [dt1;dt2;dt3];
+omega = [wx;wy;wz];
+D = kron(av',eye(3))*dJ_drho+skew(omega)*d_fk_drho
+rank(D)

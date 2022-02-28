@@ -1,5 +1,5 @@
 function lo_vel_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel, rho_bias, param)
+    vel_mocap, joint_ang, joint_vel, rho_param, param)
 % the 
 
 lo_v_data = zeros(size(joint_vel.Time,1),12);
@@ -25,11 +25,11 @@ for idx = 2:size(joint_vel.Time,1)
     
     % get rho state
     rho = zeros(2*param.rho_opt_size*param.num_leg,1)';
-    tmp_idxs = find(rho_bias.Time-t>=0);
-    rho_bias_t1 = rho_bias.Time(tmp_idxs(1)-1);
-    rho_bias_t2 = rho_bias.Time(tmp_idxs(1));
-    alpha = (t-rho_bias_t1)/(rho_bias_t2-rho_bias_t1);
-    rho = (1-alpha)*rho_bias.Data(tmp_idxs(1)-1,:) + alpha*rho_bias.Data(tmp_idxs(1),:);
+    tmp_idxs = find(rho_param.Time-t>=0);
+    rho_param_t1 = rho_param.Time(tmp_idxs(1)-1);
+    rho_param_t2 = rho_param.Time(tmp_idxs(1));
+    alpha = (t-rho_param_t1)/(rho_param_t2-rho_param_t1);
+    rho = (1-alpha)*rho_param.Data(tmp_idxs(1)-1,:) + alpha*rho_param.Data(tmp_idxs(1),:);
     
     v = zeros(3*param.num_leg,1);
     for i = 1:param.num_leg

@@ -1,10 +1,10 @@
 %% init necessary parameters
 % init kinematics parameter
-% kinematics_init_lc;
+kinematics_init_ltlc;
 % kinematics_init_lt_cx
 % init parameter
 % kinematics_init_justfix_d
-kinematics_init_ltlcoxoy;
+% kinematics_init_ltlcoxoy;
 param_init;
 % % assume all legs are active 
 % param.active_leg = [1,1,1,1];
@@ -32,7 +32,7 @@ next_x = tgt_x+ 0.10;
 next_y = tgt_y+ 0.10 ;
 next_z = tgt_z+ 0.05;
 next_yaw = tgt_yaw+ 5;
-next_pitch = tgt_pitch+ 5;
+next_pitch = tgt_pitch+ 8;
 next_roll = tgt_roll+ 5;
 
 next_q = quaternion([next_yaw next_pitch next_roll],'eulerd','ZYX','frame');
@@ -184,7 +184,7 @@ title('Velocity Z', 'interpreter', 'latex', 'FontSize',title_font_size)
 nexttile([2 1]);
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),...
     traj_t(plot_start:plot_end_idx), gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([-0.4 0.4])
+ylim([0.1 0.3])
 set(gca,'FontSize',axis_font_size)
 title(strcat('Front-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
@@ -195,7 +195,7 @@ title(strcat('Front-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '})
 nexttile([2 1]);
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),...
     traj_t(plot_start:plot_end_idx), gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([-0.4 0.4])
+ylim([0.1 0.3])
 set(gca,'FontSize',axis_font_size)
 title(strcat('Front-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
@@ -206,7 +206,7 @@ title(strcat('Front-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}
 nexttile([2 1]);
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),...
     traj_t(plot_start:plot_end_idx), gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([-0.4 0.4])
+ylim([0.1 0.3])
 set(gca,'FontSize',axis_font_size)
 title(strcat('Rear-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
@@ -217,7 +217,7 @@ title(strcat('Rear-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}),
 nexttile([2 1]);
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),...
     traj_t(plot_start:plot_end_idx), gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([-0.4 0.4])
+ylim([0.1 0.3])
 set(gca,'FontSize',axis_font_size)
 title(strcat('Rear-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);

@@ -18,17 +18,17 @@ est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:);
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance
-P = 0.1*eye(param.state_size-1);
+P = 0.5*eye(param.state_size-1);
 % P(7:9,7:9) = 0.0001*eye(3);
-P(9+1:9+param.rho_opt_size*4,9+1:9+param.rho_opt_size*4) = 0.15*eye(param.rho_opt_size*4);
+P(9+1:9+param.rho_opt_size*4,9+1:9+param.rho_opt_size*4) = 0.5*eye(param.rho_opt_size*4);
 
 % constant parameters 
 % process noise  angle, velocity, rho
-Q = diag([0.000001*ones(3,1);0.000001*ones(3,1);0.000001*ones(param.rho_opt_size*4,1)]);
+Q = diag([0.0001*ones(3,1);0.0001*ones(3,1);0.0001*ones(param.rho_opt_size*4,1)]);
 
 % measurement noise
-R = 0.0000001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.0000001*eye(3*max(size(fix_foot_id_list)));
+R = 0.00001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
+R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.00001*eye(3*max(size(fix_foot_id_list)));
 
 W = zeros(param.state_size-1, param.state_size-1);
 for i=2:traj_len
@@ -70,6 +70,7 @@ for i=2:traj_len
 %     rank(O)
     % for linear variant system we need observablity gramian
     W = W + (F')^(i-2)*H'*H*(F)^(i-2);
+    size(H)
     size(W)
     rank(W)
     

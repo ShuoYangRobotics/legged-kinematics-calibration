@@ -4,7 +4,7 @@
 % the matlab functions then outputs to C++ functions
 
 % first add modern robotics tool box
-addpath('unitree_A1/mr')
+addpath('mr')
 
 %% modify this section is parameters to be estimated are different
 % % estimate cx cy cz
@@ -169,12 +169,12 @@ matlabFunction(dJ_drho,...
 % a final test script shows that the generated fk functions work
 % test_kinematics_function_generation_cxyz
 %% C++ code generation
-codegen autoFunc_fk_pf_pos  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_fk_pf_pos
-codegen autoFunc_d_fk_dt    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_dt
-codegen autoFunc_d_fk_drho  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_drho
-codegen autoFunc_d_fk_ddrho -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_ddrho
-codegen autoFunc_dJ_dt      -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_dt
-codegen autoFunc_dJ_drho    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_drho
+% codegen autoFunc_fk_pf_pos  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_fk_pf_pos
+% codegen autoFunc_d_fk_dt    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_dt
+% codegen autoFunc_d_fk_drho  -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_drho
+% codegen autoFunc_d_fk_ddrho -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_d_fk_ddrho
+% codegen autoFunc_dJ_dt      -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_dt
+% codegen autoFunc_dJ_drho    -lang:c++ -config:lib -args {ones(3,1), ones(1,1), ones(4,1)} -d code_gen/autoFunc_dJ_drho
 
 
 %% put some necessary variables in param struct
@@ -185,6 +185,8 @@ param.rho_opt_str = '$l_c$';
 param.num_leg = 4;
 param.leg_name = ['FL','FR','RL', 'RR'];
 param.all_leg = [1,2,3,4];
+% assume all legs are active 
+param.active_leg = [1,1,1,1];
 param.ox = [0.1805,0.1805,-0.1805,-0.1805];
 param.oy = [0.047,-0.047,0.047,-0.047];
 param.d = [0.0838,-0.0838,0.0838,-0.0838];
@@ -210,3 +212,9 @@ param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt];
 param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt];
 param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt];
 
+% 
+syms ox oy d lt lc t1 t2 t3 dt1 dt2 dt3 cx cy cz wx wy wz real
+av = [dt1;dt2;dt3];
+omega = [wx;wy;wz];
+D = kron(av',eye(3))*dJ_drho+skew(omega)*d_fk_drho
+rank(D)

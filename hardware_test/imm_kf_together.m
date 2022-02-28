@@ -4,12 +4,12 @@
 warning('off')
 
 % no bias first
-rho_bias_data = param.lc_init*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = param.lc_init*ones(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
 % 1.2 draw lo velocity
 figure(1);clf
@@ -30,7 +30,7 @@ end
 
 % 1.3 run ekf to estimate fk parameters
 traj_len = length(joint_vel.Data)
-state_init = [param.lc_init*ones(param.rho_opt_size*param.num_leg,1);
+state_init = [param.lc_init*randn(param.rho_opt_size*param.num_leg,1);
                   zeros(param.rho_opt_size*param.num_leg,1)];
 
 param.simple_ekf_process_position_ratio = 5;
@@ -39,6 +39,7 @@ param.simple_ekf_process_force_ratio = 0;
 
 est_state_size = param.rho_opt_size*2*param.num_leg;
 est_state_list = zeros(est_state_size, traj_len);
+est_variance_list = zeros(4, traj_len);
 est_state_time = zeros(1,traj_len);
 % estimation covariance
 rho_P = 0.1*eye(est_state_size);
@@ -49,6 +50,8 @@ rho_Q = diag([0.01*ones(param.rho_opt_size*param.num_leg,1);
 rho_R = diag(0.001*ones(3*param.num_leg,1));
 % save initial state
 est_state_list(:,1) = state_init;
+% save variance
+est_variance_list(:,1) = 0.01*zeros(4,1);
 
 %% run IMM to get contact 
 num_modes = 16;    % 
@@ -183,7 +186,7 @@ for t_idx = 2:size(joint_vel.Time,1)
     % update x_i and P_i 
     % calculate residual 
     residual = zeros(3, num_modes);
-    if t_idx == 3000
+    if mod(t_idx,3000) == 0
         display(t_idx);
     end
     for m_idx = 1:num_modes
@@ -263,10 +266,10 @@ for t_idx = 2:size(joint_vel.Time,1)
     end
     for j = 1:param.num_leg
         contacts(j) = contact_estimation(t_idx,j) > 0.9;
-        r_weight = 4000*(1-contacts(j)) + 100*var_forces(j)+ 0.0001;
+        r_weight = 4000*(1-contacts(j)) + 0.5*var_forces(j)+ 0.00001;
         rho_R((j-1)*3+1,(j-1)*3+1) = r_weight;
         rho_R((j-1)*3+2,(j-1)*3+2) = r_weight;
-        rho_R((j-1)*3+3,(j-1)*3+3) = r_weight*10;
+        rho_R((j-1)*3+3,(j-1)*3+3) = r_weight;
         rho_Q((j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg,...
           (j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg) = contacts(j)+0.0001;
         
@@ -286,63 +289,72 @@ for t_idx = 2:size(joint_vel.Time,1)
     end
     rho_P = (eye(est_state_size) - rho_K*H)*rho_P;
     est_state_list(:,t_idx) = est_state_list(:,t_idx) + delta_x;
+    
+    est_variance_list(:,t_idx) = diag(rho_P(1:4,1:4));
 end
 
 %% get result 
-rho_bias_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
-rho_bias_data = movmean(rho_bias_data,35,1);
-rho_bias = timeseries(rho_bias_data,est_state_time,'Name',"rho_bias");
-
-% 1.5 get contact flag from foot_force just for leg one 
-contact = 300*contact_estimation(:,1);
-% plot(foot_force.Time, tmp);
-dtmp = diff(contact);
-% plot(foot_force.Time(1:end-1), dtmp);
-times = joint_vel.Time;
-start_time = times(dtmp>50);
-end_time = times(dtmp<-50);
+rho_param_data = est_state_list(1:2*param.rho_opt_size*param.num_leg,:)';
+rho_param_data = movmean(rho_param_data,35,1);
+rho_param = timeseries(rho_param_data,est_state_time,'Name',"rho_param");
 
 
-% 1.4 draw bias
-p3 = subplot(2,1,2);
-plot(rho_bias.Time,rho_bias.Data(:,1:param.rho_opt_size)); hold on;
-xlim([0 19]);
-ylim([0 0.35]);
-for i=1:min(size(start_time,1),size(end_time,1))
-a = area([start_time(i) end_time(i)],[2 2]);
-a.FaceAlpha = 0.2;
-a.FaceColor = [0.2 0.6 0.5];
-end
-xlabel('Time (s)')
-ylabel('bias (m)')
-title(['Estimated calf length. Initial calf length: ' num2str(param.lc_init)])
+rho_variance_data = movmean(est_variance_list,35,1);
+rho_variance = timeseries(rho_variance_data',est_state_time,'Name',"rho_variance");
 
 
-for i=1:min(size(start_time,1),size(end_time,1))
-subplot(2,1,1);
-a = area([start_time(i) end_time(i)],[2 2]);
-a.FaceAlpha = 0.2;
-a.FaceColor = [0.2 0.6 0.5];
-subplot(2,1,2);
-a = area([start_time(i) end_time(i)],[350 350]);
-a.FaceAlpha = 0.2;
-a.FaceColor = [0.2 0.6 0.5];
-end
+contact_flags = timeseries(contact_estimation,est_state_time,'Name',"contact_flags");
+
+% % 1.5 get contact flag from foot_force just for leg one 
+% contact = 300*contact_estimation(:,1);
+% % plot(foot_force.Time, tmp);
+% dtmp = diff(contact);
+% % plot(foot_force.Time(1:end-1), dtmp);
+% times = joint_vel.Time;
+% start_time = times(dtmp>50);
+% end_time = times(dtmp<-50);
 
 
-% 1.6 plot on figure 1 of velocity with bias
+% % 1.4 draw param
+% p3 = subplot(2,1,2);
+% plot(rho_param.Time,rho_param.Data(:,1:param.rho_opt_size)); hold on;
+% xlim([0 19]);
+% ylim([0 0.35]);
+% for i=1:min(size(start_time,1),size(end_time,1))
+% a = area([start_time(i) end_time(i)],[2 2]);
+% a.FaceAlpha = 0.2;
+% a.FaceColor = [0.2 0.6 0.5];
+% end
+% xlabel('Time (s)')
+% ylabel('param (m)')
+% title(['Estimated calf length. Initial calf length: ' num2str(param.lc_init)])
+% 
+% 
+% for i=1:min(size(start_time,1),size(end_time,1))
+% subplot(2,1,1);
+% a = area([start_time(i) end_time(i)],[2 2]);
+% a.FaceAlpha = 0.2;
+% a.FaceColor = [0.2 0.6 0.5];
+% subplot(2,1,2);
+% a = area([start_time(i) end_time(i)],[350 350]);
+% a.FaceAlpha = 0.2;
+% a.FaceColor = [0.2 0.6 0.5];
+% end
+% 
+% 
+% 1.6 plot on figure 1 of velocity with param
 lo_v_ts2 = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 
-figure(1)
-for i=1:1
-    subplot(2,1,1);
-    p4 = plot(lo_v_ts2.Time, movmean(lo_v_ts2.Data(:,1+3*(i-1)),15,1),'LineWidth',2,'Color','red');hold on;
-    xlim([0 19]);
-end
-subplot(2,1,1);
-legend([p1 p2,p4],{'ground truth', 'leg odometry velocity from leg 1 without calibration',...
-    'leg odometry velocity from leg 1 with calibration'})
-
-subplot(2,1,2);
-legend([p3],{'estimated bias from leg 1'})
+% figure(1)
+% for i=1:1
+%     subplot(2,1,1);
+%     p4 = plot(lo_v_ts2.Time, movmean(lo_v_ts2.Data(:,1+3*(i-1)),15,1),'LineWidth',2,'Color','red');hold on;
+%     xlim([0 19]);
+% end
+% subplot(2,1,1);
+% legend([p1 p2,p4],{'ground truth', 'leg odometry velocity from leg 1 without calibration',...
+%     'leg odometry velocity from leg 1 with calibration'})
+% 
+% subplot(2,1,2);
+% legend([p3],{'estimated param from leg 1'})

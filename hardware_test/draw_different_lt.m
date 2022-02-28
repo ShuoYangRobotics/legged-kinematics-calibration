@@ -1,5 +1,5 @@
 addpath('..')
-addpath('../unitree_A1/mr')
+addpath('../mr')
 
 % run kinematics function generation
 % can comment the following two scripts after running them once
@@ -17,8 +17,8 @@ LO_vel_data = zeros(param.num_dof,1);
 warning('off')
 
 % no bias first
-rho_bias_data = zeros(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
-rho_bias = timeseries(rho_bias_data,joint_ang.Time,'Name',"zero_rho_bias");
+rho_param_data = zeros(size(joint_ang.Time,1),param.rho_opt_size*param.num_leg*2);
+rho_param = timeseries(rho_param_data,joint_ang.Time,'Name',"zero_rho_param");
 
 
 
@@ -41,7 +41,7 @@ param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt; param.lc];
 param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt; param.lc];
 param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt; param.lc];
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 for i=1:1
     p3 = plot(lo_v_ts.Time, movmean(lo_v_ts.Data(:,1+3*(i-1)),15,1));hold on;
     xlim([6.5 14.5]);
@@ -53,7 +53,7 @@ param.rho_fix(:,2) = [param.ox(2);param.oy(2);param.d(2);param.lt; param.lc];
 param.rho_fix(:,3) = [param.ox(3);param.oy(3);param.d(3);param.lt; param.lc];
 param.rho_fix(:,4) = [param.ox(4);param.oy(4);param.d(4);param.lt; param.lc];
 lo_v_ts = get_lo_velocity_ts(accel_IMU, gyro_IMU, pos_mocap, orient_mocap,...
-    vel_mocap, joint_ang, joint_vel,rho_bias, param);
+    vel_mocap, joint_ang, joint_vel,rho_param, param);
 for i=1:1
     p4 = plot(lo_v_ts.Time, movmean(lo_v_ts.Data(:,1+3*(i-1)),15,1));hold on;
     xlim([6.5 14.5]);
