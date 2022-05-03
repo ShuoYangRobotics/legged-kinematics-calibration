@@ -39,3 +39,8 @@ param.noise_gyro = 1e-4;
 param.noise_ja = 1e-4;
 param.noise_jav = 1e-4;
 param.noise_feature_px = 1e-4;
+
+
+% hardware data
+param.data_duration = 0;
+param.lc_init = 0.20;
