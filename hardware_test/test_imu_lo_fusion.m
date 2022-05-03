@@ -4,7 +4,7 @@
 addpath('..')
 param.lc_init = 0.20;
 % 
-imm_kf_together;
+% imm_kf_together;
 
 % now we have following timeseries
 % accel_IMU
@@ -27,31 +27,31 @@ clf
 set(gcf,'position',[395 826 1197 836])
 subplot(3,1,1)
 tsout1 = resample(rho_param,plot_start_time:0.005:plot_end_time);
-tsout1.Data = movmean(tsout1.Data(:,[1,2]),30);
-p1 = plot(tsout1.Time,0.21*ones(size(tsout1.Time)),'LineWidth',3); hold on; 
+tsout1.Data = movmean(tsout1.Data(:,[1,2]),1);
 tsout1_Time = tsout1.Time;
 tsout11_Data = tsout1.Data(:,1);
 tsout12_Data = tsout1.Data(:,2);
-p11 = plot(tsout1_Time,tsout11_Data);
+p11 = plot(tsout1_Time,tsout11_Data);hold on; 
 p12 = plot(tsout1_Time,tsout12_Data);
 p11.XDataSource = 'tsout1_Time';
 p11.YDataSource = 'tsout11_Data';
 p12.XDataSource = 'tsout1_Time';
 p12.YDataSource = 'tsout12_Data';
-legend('0.21m','Leg 1', 'Leg 2')
+p1 = plot(tsout1.Time,0.21*ones(size(tsout1.Time)),':','LineWidth',3); 
+legend('Leg 1', 'Leg 4', '0.21m')
 xlabel('Time (s)');
 ylabel('Calf length (m)');
 title('Calibrated calf length during locomotion')
 xlim([plot_start_time plot_end_time])
 ylim([0 0.35])
-ax = gca;
-outerpos = ax.OuterPosition;
-ti = ax.TightInset; 
-left = outerpos(1) + ti(1);
-bottom = outerpos(2) + ti(2);
-ax_width = outerpos(3) - ti(1) - ti(3);
-ax_height = outerpos(4) - ti(2) - ti(4);
-ax.Position = [left bottom ax_width ax_height];
+% ax = gca;
+% outerpos = ax.OuterPosition;
+% ti = ax.TightInset; 
+% left = outerpos(1) + ti(1);
+% bottom = outerpos(2) + ti(2);
+% ax_width = outerpos(3) - ti(1) - ti(3);
+% ax_height = outerpos(4) - ti(2) - ti(4);
+% ax.Position = [left bottom ax_width ax_height];
 subplot(3,1,2)
 tsout3 = resample(pos_est_ts,plot_start_time:0.01:plot_end_time);
 tsout3_Time = tsout3.Time;
@@ -77,14 +77,14 @@ ylabel('X position (m)');
 title('Position estimation using IMU + LO')
 xlim([plot_start_time plot_end_time])
 ylim([-0.4 3.5])
-ax = gca;
-outerpos = ax.OuterPosition;
-ti = ax.TightInset; 
-left = outerpos(1) + ti(1);
-bottom = outerpos(2) + ti(2);
-ax_width = outerpos(3) - ti(1) - ti(3);
-ax_height = outerpos(4) - ti(2) - ti(4);
-ax.Position = [left bottom ax_width ax_height];
+% ax = gca;
+% outerpos = ax.OuterPosition;
+% ti = ax.TightInset; 
+% left = outerpos(1) + ti(1);
+% bottom = outerpos(2) + ti(2);
+% ax_width = outerpos(3) - ti(1) - ti(3);
+% ax_height = outerpos(4) - ti(2) - ti(4);
+% ax.Position = [left bottom ax_width ax_height];
 
 subplot(3,1,3)
 tsout6 = resample(vel_est_ts,plot_start_time:0.01:plot_end_time);
@@ -111,14 +111,14 @@ ylabel('X velocity (m)');
 title('Velocity estimation using IMU + LO')
 xlim([plot_start_time plot_end_time])
 ylim([-1.2 1.4])
-ax = gca;
-outerpos = ax.OuterPosition;
-ti = ax.TightInset; 
-left = outerpos(1) + ti(1);
-bottom = outerpos(2) + ti(2);
-ax_width = outerpos(3) - ti(1) - ti(3);
-ax_height = outerpos(4) - ti(2) - ti(4);
-ax.Position = [left bottom ax_width ax_height];
+% ax = gca;
+% outerpos = ax.OuterPosition;
+% ti = ax.TightInset; 
+% left = outerpos(1) + ti(1);
+% bottom = outerpos(2) + ti(2);
+% ax_width = outerpos(3) - ti(1) - ti(3);
+% ax_height = outerpos(4) - ti(2) - ti(4);
+% ax.Position = [left bottom ax_width ax_height];
 
 %%
 remove_nan = isnan(tsout6_Data);

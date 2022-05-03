@@ -30,7 +30,7 @@ end
 
 % 1.3 run ekf to estimate fk parameters
 traj_len = length(joint_vel.Data)
-state_init = [param.lc_init*randn(param.rho_opt_size*param.num_leg,1);
+state_init = [param.lc_init + 0.1*randn(param.rho_opt_size*param.num_leg,1);
                   zeros(param.rho_opt_size*param.num_leg,1)];
 
 param.simple_ekf_process_position_ratio = 5;
@@ -42,12 +42,13 @@ est_state_list = zeros(est_state_size, traj_len);
 est_variance_list = zeros(4, traj_len);
 est_state_time = zeros(1,traj_len);
 % estimation covariance
-rho_P = 0.1*eye(est_state_size);
+rho_P = 0.5*eye(est_state_size);
 % process noise covariance
-rho_Q = diag([0.01*ones(param.rho_opt_size*param.num_leg,1);
+rho_Q = diag([0.00001*ones(param.rho_opt_size*param.num_leg,1);
           1*ones(param.rho_opt_size*param.num_leg,1)]);
-% measurement noise covariance, only consider x velocity
+% measurement noise covariance
 rho_R = diag(0.001*ones(3*param.num_leg,1));
+rho_R3 = diag(0.001*ones(3,1));
 % save initial state
 est_state_list(:,1) = state_init;
 % save variance
@@ -90,10 +91,19 @@ Pout = zeros(3, 3);
 imm_v = zeros(length(joint_vel.Data),3);
 
 % save estimated contact 
-contact_estimation = zeros(length(joint_vel.Data),4);
+% contact_estimation = zeros(length(joint_vel.Data),4);
 
 % for each time step 
 for t_idx = 2:size(joint_vel.Time,1)
+
+    est_state_time(:,t_idx) = t;
+    if mod(t_idx,3000) == 0
+        display(t_idx);
+    end
+%     if (t_idx > 8000)
+%         break
+%     end
+
     t = joint_vel.Time(t_idx);
     dt = joint_vel.Time(t_idx) - joint_vel.Time(t_idx-1);
     
@@ -135,109 +145,105 @@ for t_idx = 2:size(joint_vel.Time,1)
     end
 
     % from foot force, generate transition probablitity
-    foot_forces = foot_force.Data(t_idx,:);
-    contact_flags = foot_forces > foot_forces_thres;
-    contact_flags = zeros(param.num_leg,1);
-    for j=1:param.num_leg
-        if (foot_forces(j) < foot_force_extrema(j,1))
-            foot_force_extrema(j,1) = foot_forces(j);
-        end
-        if (foot_forces(j) > foot_force_extrema(j,2))
-            foot_force_extrema(j,2) = foot_forces(j);
-        end
-        threadhold = 0.5*(foot_force_extrema(j,2)-foot_force_extrema(j,1))+foot_force_extrema(j,1);
-        if (foot_forces(j) > threadhold)
-            contact_flags(j) = 1;
-        end
-    end
-    
-    % convert binary contact list to contact mode
-    flag_mode = bi2de(contact_flags') + 1;  % range (1-12)
-    % transition matrix 
-    H = (1-trans_prob)/(num_modes-1)*ones(num_modes, num_modes);
-    H(flag_mode,:) = trans_prob;
-    
-    prob_bar = H * prob;
-    
-    
-    %enlarge Q and R for large foot force variance 
-    var_forces = zeros(1,param.num_leg);
-    if t_idx > 10
-        var_forces = var(foot_force.Data(t_idx-9:t_idx,:));
-    end
-%     Q = Q0 * (1 + sum(var_forces));
-    % mix x and P
-    x_i = zeros(3, num_modes);
-    P_i = zeros(3,3, num_modes);
-    for m_idx = 1:num_modes
-        sum_j = x * (H(m_idx,:)' .* prob);
-        x_i(:,m_idx) = sum_j / prob_bar(m_idx);
-    end
-    for m_idx = 1:num_modes
-        tmp_prob = H(m_idx,:)' .* prob;
-        tmp_P = zeros(3,3);
-        for m_idx2 = 1:num_modes
-            tmp_P = tmp_P + tmp_prob(m_idx2) * ...
-                (P(:,:,m_idx2) + (x(:,m_idx2) - x_i(:,m_idx))*(x(:,m_idx2) - x_i(:,m_idx))');
-        end
-        P_i(:,:, m_idx) = tmp_P ./prob_bar(m_idx);
-    end
-    
-    % update x_i and P_i 
-    % calculate residual 
-    residual = zeros(3, num_modes);
-    if mod(t_idx,3000) == 0
-        display(t_idx);
-    end
-    for m_idx = 1:num_modes
-        x_i(:,m_idx) = x_i(:,m_idx) + ai'*dt;  % IMU intergration process model
-%         x_i(:,m_idx) = vi;  % IMU intergration process model
-        P_i(:,:, m_idx) = P_i(:,:, m_idx) + Q;
-        
-        % calculate residual (Innovation)
-        binary_contact = de2bi(m_idx-1,param.num_leg)';
-        num_contacts = sum(binary_contact)+0.0001;
-        if (sum(binary_contact) == 0)
-            residual(:,m_idx) =  zeros(3,1);
-        else
-            residual(:,m_idx) = v * binary_contact / num_contacts - x_i(:,m_idx);
-        end
-        % Innovation covariance
-        %enlarge Q and R for large foot force variance 
-        R = R0 * (1 + 10*sum(var_forces'.*binary_contact));
-        S = P_i(:,:, m_idx) + R / num_contacts;
-        Sinv = inv(S);
-        % kalman gain 
-        K = P_i(:,:, m_idx) * Sinv;
-        
-        % update mode prob , likelihood
-        prob(m_idx) = prob_bar(m_idx) * 1/sqrt(2*pi*norm(S))*exp(-0.5*residual(:,m_idx)'* Sinv*residual(:,m_idx));
-        
-        % update estimation 
-        x(:,m_idx) = x_i(:,m_idx) + K * residual(:,m_idx);
-        P(:,:, m_idx) =  (eye(3) - K)*P_i(:,:, m_idx);
-    end
-    
-
-    
-    % normalize likelihood
-    prob = prob / sum(prob);
-    
-    % final x and P 
-    xout = x * prob;
-    Pout = zeros(3, 3);
-    for m_idx = 1:num_modes
-       Pout = Pout + prob(m_idx) * (P(:,:, m_idx) + (x(:, m_idx) - xout)*(x(:, m_idx) - xout)');
-    end
-    
-    imm_v(t_idx,:) = xout;
-    
-    % combine prob to find out contact probablity
-    contact_estimation(t_idx,:) = zeros(1,4);
-    for m_idx = 1:num_modes
-        binary_contact = de2bi(m_idx-1,param.num_leg);
-        contact_estimation(t_idx,:) = contact_estimation(t_idx,:) + prob(m_idx)*binary_contact;
-    end
+%     foot_forces = foot_force.Data(t_idx,:);
+%     contact_flags = foot_forces > foot_forces_thres;
+%     contact_flags = zeros(param.num_leg,1);
+%     for j=1:param.num_leg
+%         if (foot_forces(j) < foot_force_extrema(j,1))
+%             foot_force_extrema(j,1) = foot_forces(j);
+%         end
+%         if (foot_forces(j) > foot_force_extrema(j,2))
+%             foot_force_extrema(j,2) = foot_forces(j);
+%         end
+%         threadhold = 0.5*(foot_force_extrema(j,2)-foot_force_extrema(j,1))+foot_force_extrema(j,1);
+%         if (foot_forces(j) > threadhold)
+%             contact_flags(j) = 1;
+%         end
+%     end
+%     
+%     % convert binary contact list to contact mode
+%     flag_mode = bi2de(contact_flags') + 1;  % range (1-12)
+%     % transition matrix 
+%     H = (1-trans_prob)/(num_modes-1)*ones(num_modes, num_modes);
+%     H(flag_mode,:) = trans_prob;
+%     
+%     prob_bar = H * prob;
+%     
+%     
+%     %enlarge Q and R for large foot force variance 
+%     var_forces = zeros(1,param.num_leg);
+%     if t_idx > 10
+%         var_forces = var(foot_force.Data(t_idx-9:t_idx,:));
+%     end
+% %     Q = Q0 * (1 + sum(var_forces));
+%     % mix x and P
+%     x_i = zeros(3, num_modes);
+%     P_i = zeros(3,3, num_modes);
+%     for m_idx = 1:num_modes
+%         sum_j = x * (H(m_idx,:)' .* prob);
+%         x_i(:,m_idx) = sum_j / prob_bar(m_idx);
+%     end
+%     for m_idx = 1:num_modes
+%         tmp_prob = H(m_idx,:)' .* prob;
+%         tmp_P = zeros(3,3);
+%         for m_idx2 = 1:num_modes
+%             tmp_P = tmp_P + tmp_prob(m_idx2) * ...
+%                 (P(:,:,m_idx2) + (x(:,m_idx2) - x_i(:,m_idx))*(x(:,m_idx2) - x_i(:,m_idx))');
+%         end
+%         P_i(:,:, m_idx) = tmp_P ./prob_bar(m_idx);
+%     end
+%     
+%     % update x_i and P_i 
+%     % calculate residual 
+%     residual = zeros(3, num_modes);
+%     for m_idx = 1:num_modes
+%         x_i(:,m_idx) = x_i(:,m_idx) + ai'*dt;  % IMU intergration process model
+%         P_i(:,:, m_idx) = P_i(:,:, m_idx) + Q;
+%         
+%         % calculate residual (Innovation)
+%         binary_contact = de2bi(m_idx-1,param.num_leg)';
+%         num_contacts = sum(binary_contact)+0.0001;
+%         if (sum(binary_contact) == 0)
+%             residual(:,m_idx) =  zeros(3,1);
+%         else
+%             residual(:,m_idx) = v * binary_contact / num_contacts - x_i(:,m_idx);
+%         end
+%         % Innovation covariance
+%         %enlarge Q and R for large foot force variance 
+%         R = R0 * (1 + 10*sum(var_forces'.*binary_contact));
+%         S = P_i(:,:, m_idx) + R / num_contacts;
+%         Sinv = inv(S);
+%         % kalman gain 
+%         K = P_i(:,:, m_idx) * Sinv;
+%         
+%         % update mode prob , likelihood
+%         prob(m_idx) = prob_bar(m_idx) * 1/sqrt(2*pi*norm(S))*exp(-0.5*residual(:,m_idx)'* Sinv*residual(:,m_idx));
+%         
+%         % update estimation 
+%         x(:,m_idx) = x_i(:,m_idx) + K * residual(:,m_idx);
+%         P(:,:, m_idx) =  (eye(3) - K)*P_i(:,:, m_idx);
+%     end
+%     
+% 
+%     
+%     % normalize likelihood
+%     prob = prob / sum(prob);
+%     
+%     % final x and P 
+%     xout = x * prob;
+%     Pout = zeros(3, 3);
+%     for m_idx = 1:num_modes
+%        Pout = Pout + prob(m_idx) * (P(:,:, m_idx) + (x(:, m_idx) - xout)*(x(:, m_idx) - xout)');
+%     end
+%     
+%     imm_v(t_idx,:) = xout;
+%     
+%     % combine prob to find out contact probablity
+%     contact_estimation(t_idx,:) = zeros(1,4);
+%     for m_idx = 1:num_modes
+%         binary_contact = de2bi(m_idx-1,param.num_leg);
+%         contact_estimation(t_idx,:) = contact_estimation(t_idx,:) + prob(m_idx)*binary_contact;
+%     end
     
     %% rho estimation 
     est_state_time(:,t_idx) = t;
@@ -246,43 +252,29 @@ for t_idx = 2:size(joint_vel.Time,1)
     est_state_list(:,t_idx) = simple_ekf_process(est_state_list(:,t_idx-1), foot_force.Data(t_idx,:), dt, param);
     [F,G] = simple_ekf_process_jac(dt, param);
         % measure xyz velocity
-    z = [vi';vi';vi';vi'];
+    z = [vi'];
     % the predict output
-    zhat = simple_ekf_measurement(est_state_list(:,t_idx), R_er, ...
-        wi, joint_ang.Data(t_idx,:), joint_vel.Data(t_idx,:), param);
+    contacts = zeros(param.num_leg,1);
+    for j = 1:param.num_leg
+        contacts(j) = contact_estimation(t_idx,j) > 0.95;
+    end
+    zhat = combine_ekf_measurement(est_state_list(:,t_idx), R_er, ...
+        wi, joint_ang.Data(t_idx,:), joint_vel.Data(t_idx,:),contacts, param);
 
-    H = simple_ekf_measurement_jac(est_state_list(:,t_idx), R_er, ...
-        wi, joint_ang.Data(t_idx,:), joint_vel.Data(t_idx,:), param);
+    H = combine_ekf_measurement_jac(est_state_list(:,t_idx), R_er, ...
+        wi, joint_ang.Data(t_idx,:), joint_vel.Data(t_idx,:),contacts, param);
     
 %     zhat - H*est_state_list(:,t_idx)
     
     innov = z-zhat;
-    % R is very large for non contact foot
-    contacts = zeros(param.num_leg,1);
-    diff_forces = zeros(param.num_leg,1);
-    var_forces = zeros(param.num_leg,1);
-    if (t_idx > 15)
-        var_forces = var(foot_force.Data(t_idx-12:t_idx,:));
-    end
-    for j = 1:param.num_leg
-        contacts(j) = contact_estimation(t_idx,j) > 0.9;
-        r_weight = 4000*(1-contacts(j)) + 0.5*var_forces(j)+ 0.00001;
-        rho_R((j-1)*3+1,(j-1)*3+1) = r_weight;
-        rho_R((j-1)*3+2,(j-1)*3+2) = r_weight;
-        rho_R((j-1)*3+3,(j-1)*3+3) = r_weight;
-        rho_Q((j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg,...
-          (j-1)*param.rho_opt_size+1+param.rho_opt_size*param.num_leg:(j-1)*param.rho_opt_size+param.rho_opt_size+param.rho_opt_size*param.num_leg) = contacts(j)+0.0001;
-        
-%         outliner reject 
-        if (contacts(j)<1e-4)
-            innov((j-1)*3+1:(j-1)*3+3) = 0;
-        end
-    end
+
+    weight = 10./(1+exp(20*(norm(vi)-0.2)));
+    rho_R3 = diag((0.01+weight)*ones(3,1));
     
     
     rho_P = F*rho_P*F' + rho_Q;
    
-    rho_K = rho_P*H'*inv(H*rho_P*H'+rho_R);
+    rho_K = rho_P*H'*inv(H*rho_P*H'+rho_R3);
     delta_x = rho_K*(innov);
     if (norm(innov) > 1e5)
         display('something wrong');

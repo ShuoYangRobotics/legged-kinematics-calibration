@@ -20,7 +20,7 @@ tgt_roll = 0*randn;
 q = quaternion([tgt_yaw tgt_pitch tgt_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(q);
 pose_init = [tgt_x;tgt_y;tgt_z;w;x;y;z];
-angle_init = 0.2*randn(3*sum(param.active_leg),1) + repmat([0;1.2;-1.8],sum(param.active_leg),1);
+angle_init = 0.05*randn(3*sum(param.active_leg),1) + repmat([0;1.2;-1.8],sum(param.active_leg),1);
 
 %% generate features
 features_init;
@@ -28,12 +28,12 @@ features_init;
 
 %% generate another stance
 % % generate new stance location 
-next_x = tgt_x+ 0.10;
-next_y = tgt_y+ 0.10 ;
+next_x = tgt_x+ 0.10 + 0.01*randn;
+next_y = tgt_y+ 0.10 + 0.01*randn;
 next_z = tgt_z+ 0.05;
 next_yaw = tgt_yaw+ 5;
-next_pitch = tgt_pitch+ 8;
-next_roll = tgt_roll+ 5;
+next_pitch = tgt_pitch+ 5 + 0.01*randn;
+next_roll = tgt_roll+ 5+ 0.01*randn;
 
 next_q = quaternion([next_yaw next_pitch next_roll],'eulerd','ZYX','frame');
 [w,x,y,z] = parts(next_q);
@@ -63,7 +63,7 @@ traj_t = 0:dt:T;
 param.state_size = 10 + param.rho_opt_size*param.num_leg;
 param.meas_size = 6 + 6*param.num_leg;
 
-% not fully tested 
+% tested 
 [gt_state_list, meas_list] = get_traj(traj_t, pose_init, pose_next, angle_init, fix_foot_id_list, visible_feature_ids, feature_px_pos, param);
 
 %% draw everything

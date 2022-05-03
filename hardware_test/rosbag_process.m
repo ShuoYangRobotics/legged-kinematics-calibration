@@ -3,7 +3,7 @@ run ../kinematics_init_lc
 run ../param_init
 
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-29-58.bag');
-bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-42-35.bag');
+bagselect = rosbag('/home/shuoyang/rosbag/2022-01-10-14-42-35.bag');
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-32-42.bag');
 
 % bagselect = rosbag('/home/shuoy/rosbag/0110_aaron_lab/2022-01-10-14-44-11.bag');
@@ -36,15 +36,16 @@ pos_mocap.Data = pos_mocap.Data-pos_mocap.Data(1,:);
 dt_list = [0.001;pos_mocap.Time(2:end)-pos_mocap.Time(1:end-1)];
 
 %%
-[b,g] = sgolay(5,25);
-dt = 0.0028;
-dx = zeros(length(pos_mocap.Data),3);
-for p = 1:3
-  dx(:,p) = conv(pos_mocap.Data(:,p), factorial(1)/(-dt)^1 * g(:,2), 'same');
-end
-dx(1:100,:) = 0;
-dx(end-100:end,:) = 0;
-
+% [b,g] = sgolay(5,25);
+% dt = 0.0028;
+% dx = zeros(length(pos_mocap.Data),3);
+% for p = 1:3
+%   dx(:,p) = conv(pos_mocap.Data(:,p), factorial(1)/(-dt)^1 * g(:,2), 'same');
+% end
+% dx(1:100,:) = 0;
+% dx(end-100:end,:) = 0;
+vel_ts = differentiate_pos_ts(pos_mocap);
+dx = vel_ts.Data;
 % this velocity uses the IMU marker as root so
 % p_b = p_r + R_er*p_br
 % v_b = v_r + R_er*w*p_br
@@ -98,16 +99,16 @@ joint_ang_data = movmean(joint_ang_data,15,1);
 foot_force = timeseries(foot_force_data,time,'Name',"foot force");
 joint_ang = timeseries(joint_ang_data,time,'Name',"joint angle");
 
-
-[b,g] = sgolay(5,11);
-dt = 0.002;   %  HARDWARE_FEEDBACK_FREQUENCY in A1_Ctrl
-joint_vel_smooth_data = zeros(length(joint_ang.Data),param.num_dof);
-for p = 1:param.num_dof
-  joint_vel_smooth_data(:,p) = conv(joint_ang_data(:,p), factorial(1)/(-dt)^1 * g(:,2), 'same');
-end
-joint_vel_smooth_data(1:100,:) = 0;
-joint_vel_smooth_data(end-100:end,:) = 0;
-joint_vel = timeseries(joint_vel_smooth_data,time,'Name',"joint velocity");
+joint_vel = differentiate_pos_ts(joint_ang);
+% [b,g] = sgolay(5,11);
+% dt = 0.002;   %  HARDWARE_FEEDBACK_FREQUENCY in A1_Ctrl
+% joint_vel_smooth_data = zeros(length(joint_ang.Data),param.num_dof);
+% for p = 1:param.num_dof
+%   joint_vel_smooth_data(:,p) = conv(joint_ang_data(:,p), factorial(1)/(-dt)^1 * g(:,2), 'same');
+% end
+% joint_vel_smooth_data(1:100,:) = 0;
+% joint_vel_smooth_data(end-100:end,:) = 0;
+% joint_vel = timeseries(joint_vel_smooth_data,time,'Name',"joint velocity");
 
 
 

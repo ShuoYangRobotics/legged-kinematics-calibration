@@ -9,8 +9,7 @@ jac = eye(param.state_size-1);
 
 jac(1:3, 7:9) = eye(3)*dt;
 
-jac(4:6,4:6) = eye(3) - skew(omega)*sin(dt) + skew(omega)*skew(omega)*(1-cos(dt));
-% jac(4:6,4:6) = eye(3) - skew(omega)*dt;
+jac(4:6,4:6) = eye(3) - skew(omega)*dt;
 
 jac(7:9,4:6) = -R_er*skew(acc*dt);
 

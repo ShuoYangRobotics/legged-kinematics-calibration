@@ -11,7 +11,7 @@ addpath('../mr')
 
 % run kinematics function generation
 % can comment the following two scripts after running them once
-% run ../kinematics_init_lc
+run ../kinematics_init_lc
 % run ../kinematics_init_cxyz
 % run ../param_init
 

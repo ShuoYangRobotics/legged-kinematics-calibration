@@ -137,12 +137,12 @@ for i=1:traj_len
         state_list(10+(j-1)*param.rho_opt_size+1:10+j*param.rho_opt_size,i) = param.rho_opt_true(:,j);
     end
     
-    % todo: inject some noise here?
-    meas_list(1:3,i) = R_er'*ddp_list(:,i);  % notice this does not have gravity
-    meas_list(4:6,i) = w_list(:,i);
-    meas_list(7:18,i) = joint_angle_list(:,i);
-    meas_list(19:30,i) = joint_av_list(:,i);
-    meas_list(31:end,i) = feature_pt_pos_list(:,i);
+    %inject some noise here
+    meas_list(1:3,i) = R_er'*ddp_list(:,i)          + 0.001*randn(3,1);  % notice this does not have gravity
+    meas_list(4:6,i) = w_list(:,i)                  + 0.001*randn(3,1);
+    meas_list(7:18,i) = joint_angle_list(:,i)       + 0.001*randn(12,1);
+    meas_list(19:30,i) = joint_av_list(:,i)         + 0.001*randn(12,1);
+    meas_list(31:end,i) = feature_pt_pos_list(:,i)  + 0.001*randn(size(feature_pt_pos_list(:,i)));
 end
 
 end
