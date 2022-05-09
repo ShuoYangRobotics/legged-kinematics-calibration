@@ -85,7 +85,9 @@ for t_idx = 2:size(sensor_data.joint_vel.Time,1)
         db(t_idx) = mean(svd(H));
     
         weight = 0;
-        weight = 300./(1+exp(10*(mean(svd(H))-0.3)));
+        if param.with_observability == 1
+            weight = 300./(1+exp(10*(mean(svd(H))-0.3)));
+        end
         rho_R3_mod = rho_R3 + weight*eye(3);
     
         rho_K = rho_P*H'/(H*rho_P*H'+rho_R3_mod);

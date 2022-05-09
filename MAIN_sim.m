@@ -1,7 +1,7 @@
 %% init necessary parameters
 % init kinematics parameter
-kinematics_init_ltlc;
-% kinematics_init_lc;
+% kinematics_init_ltlc;
+kinematics_init_lc;
 param_init;
 % % assume all legs are active 
 % param.active_leg = [1,1,1,1];
@@ -59,7 +59,7 @@ traj_t = 0:dt:T;
 
 param.state_size = 10 + param.rho_opt_size*param.num_leg;
 param.meas_size = 6 + 6*param.num_leg;
-
+param.with_noise = 1;
 % tested 
 [gt_state_list, meas_list] = get_traj(traj_t, pose_init, pose_next, angle_init, fix_foot_id_list, visible_feature_ids, feature_px_pos, param);
 
@@ -124,100 +124,206 @@ sum(new_next_state-new_diff_next_state)/max(size(new_diff_next_state))          
 
 %% start to use EKF to estimate state 
 state_init = gt_state_list(:,1);
-[est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param);
+[est_state_list, est_variance_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param);
 plot_start = 1
 plot_end_idx = size(traj_t,2)-1
 %
 % compare est_state_list with gt_state_list;
 [est_state_list(:,1) est_state_list(:,end) gt_state_list(:,1) gt_state_list(:,end) ]
-figure(3)
-line_width = 4;
-axis_font_size = 19
-title_font_size = 19
+% figure(3)
+% line_width = 4;
+% axis_font_size = 19
+% title_font_size = 19
+% lgd_font_size = 10
+% tiledlayout(7,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
+% nexttile
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(1,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(1,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Position X', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
+% % lgd.FontSize = lgd_font_size;
+% nexttile
+% plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(8,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(8,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Velocity X', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
+% % lgd.FontSize = lgd_font_size;
+% nexttile
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(2,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(2,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Position Y', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
+% % lgd.FontSize = lgd_font_size;
+% nexttile
+% plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(9,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(9,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Velocity Y', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
+% % lgd.FontSize = lgd_font_size;
+% nexttile
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(3,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(3,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Position Z', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
+% % lgd.FontSize = lgd_font_size;
+% nexttile
+% plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(10,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(10,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% set(gca,'FontSize',axis_font_size)
+% title('Velocity Z', 'interpreter', 'latex', 'FontSize',title_font_size)
+% % lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
+% % lgd.FontSize = lgd_font_size;
+% nexttile([2 1]);
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% ylim([0.1 0.3])
+% set(gca,'FontSize',axis_font_size)
+% title(strcat('Front-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+% % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
+% % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
+% %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
+% % lgd.FontSize = lgd_font_size;
+% 
+% nexttile([2 1]);
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% ylim([0.1 0.3])
+% set(gca,'FontSize',axis_font_size)
+% title(strcat('Front-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+% % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
+% % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
+% %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
+% % lgd.FontSize = lgd_font_size;
+% 
+% nexttile([2 1]);
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% ylim([0.1 0.3])
+% set(gca,'FontSize',axis_font_size)
+% title(strcat('Rear-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+% % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
+% % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
+% %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
+% % lgd.FontSize = lgd_font_size;
+% 
+% nexttile([2 1]);
+% plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),...
+%     traj_t(plot_start:plot_end_idx), gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
+% ylim([0.1 0.3])
+% set(gca,'FontSize',axis_font_size)
+% title(strcat('Rear-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+% % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
+% % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
+% %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
+% % lgd.FontSize = lgd_font_size;
+
+%% save calf length estimation result 
+figure('Name','sim_calibrate',...
+    'Units','inches',...
+'Position',[0 0 3.5 2],...
+'PaperPositionMode','auto')
+clf;
+line_width = 3;
+axis_font_size = 10
+title_font_size = 6
 lgd_font_size = 10
-tiledlayout(7,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
-nexttile
-plot(traj_t(plot_start:plot_end_idx), est_state_list(1,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(1,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Position X', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
-% lgd.FontSize = lgd_font_size;
-nexttile
-plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(8,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(8,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Velocity X', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
-% lgd.FontSize = lgd_font_size;
-nexttile
-plot(traj_t(plot_start:plot_end_idx), est_state_list(2,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(2,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Position Y', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
-% lgd.FontSize = lgd_font_size;
-nexttile
-plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(9,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(9,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Velocity Y', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
-% lgd.FontSize = lgd_font_size;
-nexttile
-plot(traj_t(plot_start:plot_end_idx), est_state_list(3,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(3,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Position Z', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'Location', 'Northwest', 'interpreter', 'latex');lgd.FontSize = 8;
-% lgd.FontSize = lgd_font_size;
-nexttile
-plot([0 traj_t(plot_start:plot_end_idx-1)], est_state_list(10,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(10,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-set(gca,'FontSize',axis_font_size)
-title('Velocity Z', 'interpreter', 'latex', 'FontSize',title_font_size)
-% lgd = legend('Estimation', 'Ground Truth', 'interpreter', 'latex');
-% lgd.FontSize = lgd_font_size;
-nexttile([2 1]);
+ylim_low = 0.19;
+ylim_high = 0.22;
+tiledlayout(2,2, 'Padding', 'none', 'TileSpacing', 'compact');
+nexttile;
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([0.1 0.3])
-set(gca,'FontSize',axis_font_size)
-title(strcat('Front-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+    traj_t(plot_start:plot_end_idx), gt_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx),'k--','LineWidth',line_width); hold on;
+% draw 3sigma variance 1 
+plot(traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx) + ...
+        3*est_variance_list(9+(1-1)*param.rho_opt_size+1:9+1*param.rho_opt_size,plot_start:plot_end_idx),'r-.',...
+    traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(1-1)*param.rho_opt_size+1:10+1*param.rho_opt_size,plot_start:plot_end_idx) - ...
+            3*est_variance_list(9+(1-1)*param.rho_opt_size+1:9+1*param.rho_opt_size,plot_start:plot_end_idx),'r-.','LineWidth',line_width/1.5)
+
+ylim([ylim_low ylim_high])
+set(gca,'FontSize',axis_font_size,'YTick',0.15:0.01:0.25,'XTick',0:0.05:0.1)
+title(strcat('Leg 1 (Front-left)'), 'FontName','Times','interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
 %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
 % lgd.FontSize = lgd_font_size;
 
-nexttile([2 1]);
+nexttile;
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([0.1 0.3])
-set(gca,'FontSize',axis_font_size)
-title(strcat('Front-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+    traj_t(plot_start:plot_end_idx), gt_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx),'k--','LineWidth',line_width); hold on;
+% draw 3sigma variance 2 
+plot(traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx) + ...
+        3*est_variance_list(9+(2-1)*param.rho_opt_size+1:9+2*param.rho_opt_size,plot_start:plot_end_idx),'r-.',...
+    traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(2-1)*param.rho_opt_size+1:10+2*param.rho_opt_size,plot_start:plot_end_idx) - ...
+            3*est_variance_list(9+(2-1)*param.rho_opt_size+1:9+2*param.rho_opt_size,plot_start:plot_end_idx),'r-.','LineWidth',line_width/1.5)
+
+ylim([ylim_low ylim_high])
+set(gca,'FontSize',axis_font_size,'YTick',0.15:0.01:0.25,'XTick',0:0.05:0.1)
+title(strcat('Leg 2 (Front-right)'), 'FontName','Times','interpreter', 'latex', 'FontSize',title_font_size);
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
 %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
 % lgd.FontSize = lgd_font_size;
 
-nexttile([2 1]);
+nexttile;
 plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([0.1 0.3])
-set(gca,'FontSize',axis_font_size)
-title(strcat('Rear-left Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
+    traj_t(plot_start:plot_end_idx), gt_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx),'k--','LineWidth',line_width); hold on;
+% draw 3sigma variance 3 
+plot(traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx) + ...
+        3*est_variance_list(9+(3-1)*param.rho_opt_size+1:9+3*param.rho_opt_size,plot_start:plot_end_idx),'r-.',...
+    traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(3-1)*param.rho_opt_size+1:10+3*param.rho_opt_size,plot_start:plot_end_idx) - ...
+            3*est_variance_list(9+(3-1)*param.rho_opt_size+1:9+3*param.rho_opt_size,plot_start:plot_end_idx),'r-.','LineWidth',line_width/1.5)
+
+ylim([ylim_low ylim_high])
+set(gca,'FontSize',axis_font_size,'YTick',0.15:0.01:0.25,'XTick',0:0.05:0.1)
+title(strcat('Leg 3 (Rear-left)'), 'FontName','Times','interpreter', 'latex', 'FontSize',title_font_size);
+% legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
+% lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
+%              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
+% lgd.FontSize = lgd_font_size;
+xlabel({'Time (s)'},...
+'FontUnits','points',...
+'FontWeight','normal',...
+'interpreter','latex',...
+'FontSize',axis_font_size,...
+'FontName','Times')
+
+nexttile;
+plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),...
+    traj_t(plot_start:plot_end_idx), gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),'k--','LineWidth',line_width); hold on;
+% draw 3sigma variance 4 
+plot(traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx) + ...
+        3*est_variance_list(9+(4-1)*param.rho_opt_size+1:9+4*param.rho_opt_size,plot_start:plot_end_idx),'r-.',...
+    traj_t(plot_start:plot_end_idx), ...
+        est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx) - ...
+            3*est_variance_list(9+(4-1)*param.rho_opt_size+1:9+4*param.rho_opt_size,plot_start:plot_end_idx),'r-.','LineWidth',line_width/1.5)
+
+ylim([ylim_low ylim_high])
+set(gca,'FontSize',axis_font_size,'YTick',0.15:0.01:0.25,'XTick',0:0.05:0.1)
+title(strcat('Leg 4 (Rear-right)'),'FontName','Times', 'interpreter', 'latex', 'FontSize',title_font_size);
+xlabel({'Time (s)'},...
+'FontUnits','points',...
+'FontWeight','normal',...
+'interpreter','latex',...
+'FontSize',axis_font_size,...
+'FontName','Times')
 % legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
 % lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
 %              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
 % lgd.FontSize = lgd_font_size;
 
-nexttile([2 1]);
-plot(traj_t(plot_start:plot_end_idx), est_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),...
-    traj_t(plot_start:plot_end_idx), gt_state_list(10+(4-1)*param.rho_opt_size+1:10+4*param.rho_opt_size,plot_start:plot_end_idx),'-.','LineWidth',line_width)
-ylim([0.1 0.3])
-set(gca,'FontSize',axis_font_size)
-title(strcat('Rear-right Leg', {' '}, {'$\rho$ = ['}, param.rho_opt_str, {'] '}), 'interpreter', 'latex', 'FontSize',title_font_size);
-% legend([repmat({'Estimation'},1,param.rho_opt_size) repmat({'Ground Truth'},1,param.rho_opt_size)]);
-% lgd = legend('$l_t$ Estimation','$l_c$ Estimation', '$o_x$ Estimation','$o_y$ Estimation',...
-%              '$l_t$ Ground Truth', '$l_c$ Ground Truth','$o_x$ Ground Truth', '$o_y$ Ground Truth','NumColumns',2, 'interpreter', 'latex', 'Location', 'Southeast');
-% lgd.FontSize = lgd_font_size;
+matlab2tikz('sim_ekf_param_output.tex',...
+            'extraAxisOptions',{'ylabel near ticks','xlabel near ticks',...
+            'scaled ticks=false',...
+            'stack plots=false' })

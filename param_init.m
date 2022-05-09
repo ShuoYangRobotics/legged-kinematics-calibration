@@ -30,6 +30,9 @@ param.horiz_film = 0.4;
 param.verti_film = 0.3;
 
 % noise of sensor measurement
+param.with_noise = 1;
+param.with_observability = 1;
+
 param.noise_acc_bias = 1e-4;
 param.noise_gyro_bias = 1e-4;
 param.noise_rho = 1e-4;

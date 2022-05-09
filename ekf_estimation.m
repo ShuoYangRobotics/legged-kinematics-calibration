@@ -1,4 +1,4 @@
-function [est_state_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
+function [est_state_list, est_variance_list] = ekf_estimation(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
 % most important function!
 
 % gt_state_list just for debug and compare 
@@ -22,13 +22,17 @@ P = 0.5*eye(param.state_size-1);
 % P(7:9,7:9) = 0.0001*eye(3);
 P(9+1:9+param.rho_opt_size*4,9+1:9+param.rho_opt_size*4) = 0.5*eye(param.rho_opt_size*4);
 
+est_variance_list = zeros(param.state_size-1, traj_len);
+    
+    
+est_variance_list(:,1) = diag(P);
 % constant parameters 
 % process noise  angle, velocity, rho
-Q = diag([0.0001*ones(3,1);0.0001*ones(3,1);0.0001*ones(param.rho_opt_size*4,1)]);
+Q = diag([0.01*ones(3,1);0.01*ones(3,1);0.001*ones(param.rho_opt_size*4,1)]);
 
 % measurement noise
-R = 0.00001*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
-R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.00001*eye(3*max(size(fix_foot_id_list)));
+R = 0.005*eye(3*max(size(fix_foot_id_list))+2*num_visual_features);
+R(2*num_visual_features+1:end,2*num_visual_features+1:end) = 0.005*eye(3*max(size(fix_foot_id_list)));
 
 W = zeros(param.state_size-1, param.state_size-1);
 for i=2:traj_len
@@ -65,6 +69,8 @@ for i=2:traj_len
     delta_x = K*(0-r);
     P = (eye(param.state_size-1) - K*H)*P;
     est_state_list(:,i) = ekf_state_update(est_state_list(:,i), delta_x);
+    diag(P)'
+    est_variance_list(:,i) = diag(P);
     % for linear invariant system this is correct
 %     O=[H;H*F;H*F^2;H*F^3;H*F^4];
 %     rank(O)
@@ -76,5 +82,6 @@ for i=2:traj_len
     
 end
 est_state_list(:,traj_len) = est_state_list(:,traj_len-1);
+est_variance_list(:,traj_len) = est_variance_list(:,traj_len-1);
 
 end

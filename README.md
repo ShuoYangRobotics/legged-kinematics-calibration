@@ -35,3 +35,6 @@ The estimated calf length will be plotted in a few seconds. The length changes b
 
 Comparing to simulation, the hardware estimation is more noisy. This is due to sensor noise and inaccuracy in foot contact detection. Also, as we analysed in the paper, when the joint velocities and body angular velocities are close to zero, kinematic parameters become unobservable. So the estimation will slowly drift when the robot stands still (around 3-6s in datasets).
 
+
+
+Dataset link: https://drive.google.com/drive/folders/1s38f7azFWkmGE17V7XUZCtsJWAGyVYnM

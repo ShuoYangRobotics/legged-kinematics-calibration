@@ -1,7 +1,4 @@
-function [est_state_list] = ekf_estimation_leg_only(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
-% most important function!
-
-% gt_state_list just for debug and compare 
+function [est_state_list] = ekf_estimation_leg_true(traj_t, state_init, meas_list, fix_foot_id_list, visible_feature_ids, gt_state_list, param)
 
 traj_len = max(size(traj_t));
 dt = traj_t(3)-traj_t(2);
@@ -9,22 +6,18 @@ est_state_list = zeros(param.state_size, traj_len);
     
     
 est_state_list(:,1) = state_init;
-% for j=1:param.num_leg
-%   est_state_list(10+j,1) = est_state_list(10+j,1) + 0.05*randn;
-% %   est_state_list(16+j,1) = est_state_list(16+j,1);
-% end
-% random initial rho_opt
-est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_init(:)+ 0.05*randn(param.rho_opt_size*4,1);
+est_state_list(10+1:10+param.rho_opt_size*4,1) = param.rho_opt_true(:);
+
 num_visual_features = max(size(visible_feature_ids));
 
 % estimation covariance
-P = 0.00001*eye(param.state_size-1);
+P = 0.05*eye(param.state_size-1);
 % P(7:9,7:9) = 0.0001*eye(3);
-P(10:13,10:13) = 0.05*eye(4);
+P(10:13,10:13) = 0.00*eye(4);
 
 % constant parameters 
 % process noise  angle, velocity, rho
-Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.1*ones(4,1)]);
+Q = diag([0.001*ones(3,1);0.001*ones(3,1);0.00*ones(4,1)]);
 
 % measurement noise
 R = 0.001*eye(3*max(size(fix_foot_id_list)));
@@ -37,6 +30,7 @@ for i=2:traj_len-1
     est_state_list(:,i) = ekf_process(est_state_list(:,i-1), meas_list(:,i), dt, param);
     F = ekf_process_jac(est_state_list(:,i-1), meas_list(:,i), dt, param);
     
+    est_state_list(10+1:10+param.rho_opt_size*4,i) = param.rho_opt_true(:);
     % map process noise to dx
     F_w = zeros(param.state_size-1, 10);
     F_w(4:6,1:3) = eye(3);
@@ -66,6 +60,7 @@ for i=2:traj_len-1
     delta_x = K*(0-r);
     P = (eye(param.state_size-1) - K*H)*P;
     est_state_list(:,i) = ekf_state_update(est_state_list(:,i), delta_x);
+    est_state_list(10+1:10+param.rho_opt_size*4,i) = param.rho_opt_true(:);
 
     % for linear invariant system this is correct
 %     O=[H;H*F;H*F^2;H*F^3;H*F^4];

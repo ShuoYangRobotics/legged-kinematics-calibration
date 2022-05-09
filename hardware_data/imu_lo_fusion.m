@@ -54,7 +54,7 @@ for t_idx = 2:size(lo_v_ts.Time,1)
         R = diag(9999*ones(3,1));
     else
         vm = lo_vs*contacts/sum_contacts;
-        R = diag(0.01*ones(3,1));
+        R = diag(0.05*ones(3,1));
     end
     
     % measurement model 
@@ -79,7 +79,7 @@ for t_idx = 2:size(lo_v_ts.Time,1)
     est_state_time(:,t_idx) = t;
 end
 % notice ts data should be Nx3 dimension
-pos_ts = timeseries(est_state_list(1:3,:)',est_state_time,'Name',"pos_ts");
 vel_ts = timeseries(est_state_list(4:6,:)',est_state_time,'Name',"vel_ts");
+pos_ts = intergrate_vel_ts(vel_ts);
 end
 

@@ -1,4 +1,5 @@
-function [state_list, meas_list] = get_traj(traj_t, pose_init, pose_end, angle_init, fix_foot_id_list, visible_feature_ids, feature_px_pos_init, param)
+function [state_list, meas_list] = get_traj(traj_t, pose_init, pose_end, ...
+    angle_init, fix_foot_id_list, visible_feature_ids, feature_px_pos_init, param)
 % input
 %  - traj_t: a list of trajectory time
 %  - pose_init:  pose at t=0
@@ -105,8 +106,10 @@ feature_pt_pos_list(:,1) = feature_px_pos_init;
     
 for i=2:traj_len
     next_p_er = p_list(:,i);
+    next_body_v = dp_list(:,i);
     next_q_er = quaternion(q_list(:,i)');
-    
+    next_R_er = quat2rotm(next_q_er);
+    omega = w_list(:,i);
     for j = 1:param.num_leg
         mask = fix_foot_id_list(:) == j;
         if any(mask) 
@@ -118,12 +121,23 @@ for i=2:traj_len
         else
             joint_angle_list((j-1)*3+1:(j-1)*3+3,i) = joint_angle_list((j-1)*3+1:(j-1)*3+3,i-1);
         end
+        angle = joint_angle_list((j-1)*3+1:(j-1)*3+3,i);
+        p_rf = autoFunc_fk_pf_pos(angle,param.rho_opt_true(:,j),param.rho_fix(:,j));
+        J_rf = autoFunc_d_fk_dt(angle,param.rho_opt_true(:,j),param.rho_fix(:,j));
+        joint_av_list((j-1)*3+1:(j-1)*3+3,i) = J_rf\(-next_R_er'*next_body_v - skew(omega)*p_rf);
     end
-    joint_av_list(:,i) = (joint_angle_list(:,i) - joint_angle_list(:,i-1))/traj_dt(i);
+% 
+%     joint_av_list(:,i) = (joint_angle_list(:,i) - joint_angle_list(:,i-1))/traj_dt(i);
     
-    feature_pt_pos_list(:,i) = project_features(next_p_er, next_q_er, visible_feature_ids, param);
+    if param.with_noise == 1
+        feature_pt_pos_list(:,i) = project_features(next_p_er, next_q_er, visible_feature_ids, param);
+        feature_pt_pos_list(:,i) = feature_pt_pos_list(:,i) + 0.005*randn(size(feature_pt_pos_list(:,i)));
+    else
+        feature_pt_pos_list(:,i) = project_features(next_p_er, next_q_er, visible_feature_ids, param);
+    end
 end
 
+for i=2:traj_len
 
 % assemble p_list dp_list ddp_list q_list w_list joint_angle_list joint_av_list
 % into state_list, meas_list
@@ -138,11 +152,19 @@ for i=1:traj_len
     end
     
     %inject some noise here
-    meas_list(1:3,i) = R_er'*ddp_list(:,i)          + 0.001*randn(3,1);  % notice this does not have gravity
-    meas_list(4:6,i) = w_list(:,i)                  + 0.001*randn(3,1);
-    meas_list(7:18,i) = joint_angle_list(:,i)       + 0.001*randn(12,1);
-    meas_list(19:30,i) = joint_av_list(:,i)         + 0.001*randn(12,1);
-    meas_list(31:end,i) = feature_pt_pos_list(:,i)  + 0.001*randn(size(feature_pt_pos_list(:,i)));
+    if param.with_noise == 1
+        meas_list(1:3,i) = R_er'*ddp_list(:,i)          + 0.005*randn(3,1);  % notice this does not have gravity
+        meas_list(4:6,i) = w_list(:,i)                  + 0.005*randn(3,1);
+        meas_list(7:18,i) = joint_angle_list(:,i)       + 0.005*randn(12,1);
+        meas_list(19:30,i) = joint_av_list(:,i)         + 0.005*randn(12,1);
+        meas_list(31:end,i) = feature_pt_pos_list(:,i)  + 0.005*randn(size(feature_pt_pos_list(:,i)));
+    else
+        meas_list(1:3,i) = R_er'*ddp_list(:,i);  % notice this does not have gravity
+        meas_list(4:6,i) = w_list(:,i)        ;
+        meas_list(7:18,i) = joint_angle_list(:,i) ;
+        meas_list(19:30,i) = joint_av_list(:,i)         ;
+        meas_list(31:end,i) = feature_pt_pos_list(:,i)  ;
+    end
 end
 
 end
