@@ -1,8 +1,8 @@
 %% init necessary parameters
 % init kinematics parameter
 % kinematics_init_ltlc;
-kinematics_init_lc;
-param_init;
+run ../kinematics_init_lc;
+run ../param_init;
 % % assume all legs are active 
 % param.active_leg = [1,1,1,1];
 

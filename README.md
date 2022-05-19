@@ -4,8 +4,10 @@ This repo contains code accompanying the following paper:
 
 by Shuo Yang. We proposed a method to let legged robots do online calibration of certain kinematic parameters such as leg length that are hard to measure due to foot deformation. The repo provide a MATLAB simulation to conduct observablity analysis and a script for calibrating parameters using sensor data collected on robot hardware. 
 
+Please notice the code is developed in MATLAB R2022a. And only tested in R2021b and R2022a. 
+
 ## EKF using Simulation Data
-The following script contains a working example 
+The following script in folder "sim_data" contains a working example 
 ```matlab
 MAIN_sim.m
 ```
@@ -23,7 +25,7 @@ Scripts in folder "hardware_data" runs EKF on these rosbags to estimate the calf
 
 Change variable "file_path" to the location of the dataset, then run the script
 ```matlab
-main_kinematic_calibration.m
+MAIN_kinematic_calibration.m
 ```
 
 The estimated calf length will be plotted in a few seconds. The length changes between 0.19-0.23m during walking. 
