@@ -7,8 +7,6 @@ disp('read rosbag');
 file_path = '/home/shuoyang/rosbag/2022-01-10-14-42-35.bag';  %1
 % file_path = '/home/shuoyang/rosbag/2022-01-10-14-29-58.bag';  %2
 % file_path = '/home/shuoyang/rosbag/2022-01-10-14-44-11.bag';    %3
-% file_path = '/home/shuoyang/rosbag/2022-01-10-14-46-26.bag';    %4
-% file_path = '/home/shuoyang/rosbag/2022-01-10-14-47-38.bag';    %5
 [sensor_data, param] = get_sensor_data_from_dataset(file_path, param);
 contact_flags = get_contact_flags_from_dataset(file_path);
 % 
